@@ -1,0 +1,15 @@
+# Data is downloaded or generated locally, never committed -- see ATTRIBUTION.md.
+track-1/data/
+track-2/data/raw/
+track-2/data/prepped/
+track-2/data/synthetic/
+!track-2/data/README.md
+!track-2/data/checksums.txt
+
+__pycache__/
+*.pyc
+.venv/
+.ipynb_checkpoints/
+.DS_Store
+claims.json
+out/
