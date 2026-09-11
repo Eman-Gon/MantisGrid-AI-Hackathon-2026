@@ -48,6 +48,18 @@ mg.causal(finding_id)
 Downloading every finding takes about 24 requests. Keep the DataFrame rather than
 re-fetching, or filter by `detector_id`.
 
+## From an AI agent
+
+`mcp_layer/` serves the same endpoints as tools for an AI agent, over MCP (Model Context
+Protocol). With [uv](https://docs.astral.sh/uv/) installed and the data generated:
+
+```bash
+make mcp
+```
+
+`mcp_layer/README.md` has the list of tools and the config for connecting an agent
+client such as Claude Desktop or Cursor.
+
 ---
 
 ## `POST /v1/events/findings`
