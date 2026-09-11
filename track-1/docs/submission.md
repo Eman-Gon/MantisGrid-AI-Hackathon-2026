@@ -106,8 +106,6 @@ we don't score from it.
 | `REPORT.md` and `eval/` | judges | 25% |
 | cost | Featherless's billing of our key during your run, priced at the table in `docs/models.md` | 20% |
 
-The band descriptors are in `../JUDGING.md`.
-
 ## Check it before you submit
 
 ```bash

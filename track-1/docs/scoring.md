@@ -7,8 +7,7 @@
 | **Evaluation quality** — your harness and your comparisons | 25% |
 | **Cost efficiency** — dollars spent per case, alongside accuracy | 20% |
 
-Ties go to evidence, then to how honestly you state uncertainty. Full band descriptors
-are in `../JUDGING.md` — written for the judges, and not hidden from you.
+Ties go to evidence, then to how honestly you state uncertainty.
 
 **There's no interface dimension.** Your agent runs headless and writes files; nobody
 watches it work. (Track 2 is the visualization track.)

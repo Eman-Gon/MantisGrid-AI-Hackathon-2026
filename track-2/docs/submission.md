@@ -113,7 +113,7 @@ the one clearly wrong answer.
 | `claims.json` | some fields against a ground truth we hold, the rest by judges reading your `basis`, `rationale` and `reasoning`; intervals and confidences are how calibration is scored |
 | `REPORT.md` | judges |
 
-The weights are in the track brief, and the band descriptors in `../JUDGING.md`.
+The weights are in the track brief.
 
 ## Check it before you submit
 

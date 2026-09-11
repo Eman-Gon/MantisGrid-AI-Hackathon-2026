@@ -55,8 +55,6 @@ A repository we can run with one command, serving your dashboard on `:3000`, plu
 | **Business framing** — every number in dollars, hours or % of capacity | 20% |
 | **Beyond the brief** — the fourth thing, after the three tiles | 10% |
 
-Full detail in `../JUDGING.md`. It's written for the judges, and we're not hiding it.
-
 ## The guides
 
 | | |
