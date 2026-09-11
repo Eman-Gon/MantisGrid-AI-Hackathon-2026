@@ -1,6 +1,11 @@
 # Data attribution and licences
 
-Neither dataset is ours. Please credit them in anything you publish.
+## Track 1 — OpenRCA
+
+Incident telemetry is from **OpenRCA** (Xu et al., ICLR 2025), sourced from the AIOps
+Challenge series and licensed under
+[CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/). The bundles you
+download are prepared by us from it: the answers to the evaluated cases are removed.
 
 ## Track 2 — MIT SuperCloud
 
@@ -20,10 +25,3 @@ Agreement FA8750-19-2-1000.
 
 One Track 2 scenario — the shared-volume storage incident — is synthetic and ours,
 not MIT's. Every synthetic record carries `metadata.synthetic = true`.
-
-## Track 1 — OpenRCA
-
-Incident telemetry is from **OpenRCA** (Xu et al., ICLR 2025), sourced from the AIOps
-Challenge series and licensed under
-[CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/). The bundles you
-download are prepared by us from it: the answers to the evaluated cases are removed.

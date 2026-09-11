@@ -6,10 +6,6 @@
 > **Build an agent that works out — from the telemetry alone — when each failure
 > started, which component caused it, and why.**
 
-Eleven of the twelve red dashboards are downstream of the twelfth, and nothing in the
-stack tells you which one. An agent that answers is a weekend project. One whose
-accuracy, cost and failure modes you can *state* is what gets people hired.
-
 ## The twist: route across a model family
 
 Your agent runs on the **GLM model family** on Featherless — seven models, from cheap
@@ -59,7 +55,7 @@ and writes `predictions.csv` plus one `evidence/<row_id>.md` per case. Details:
 | **Cost efficiency** — dollars per case, read alongside accuracy | 20% |
 
 The state of the art gets about **one case in nine**, so most answers will be wrong.
-Build for that. Full detail: `docs/scoring.md` and `../JUDGING.md`.
+Build for that. Full detail: `docs/scoring.md`
 
 ## The guides
 

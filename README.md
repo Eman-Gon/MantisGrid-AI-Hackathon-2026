@@ -1,6 +1,6 @@
 # MantisGrid Hackathon 2026
 
-Two tracks. Pick one.
+Two tracks. Do one or both.
 
 | Track | The question | You build |
 |---|---|---|
@@ -12,13 +12,8 @@ Each track's `README.md` is its brief. Start there.
 ## Before you start
 
 - [`PARTICIPANT_AGREEMENT.md`](PARTICIPANT_AGREEMENT.md) — the terms you agree to.
-- [`JUDGING.md`](JUDGING.md) — how both tracks are scored. Written for the judges; we
-  are not hiding it from you.
 - [`ATTRIBUTION.md`](ATTRIBUTION.md) — where the data comes from, and its licences.
 
 ## The data is not in this repository
 
-Both datasets are licensed for non-commercial use, and Track 2's forbids
-redistributing anything derived from it. So you download the source data yourself
-and, for Track 2, generate the working tables on your own machine. Each track's
-README says how.
+Each track's README tells you how to get the data.
