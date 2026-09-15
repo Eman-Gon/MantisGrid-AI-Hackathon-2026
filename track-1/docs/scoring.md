@@ -79,7 +79,7 @@ A shot in the dark and a narrowed hypothesis are different — say which is whic
 
 ## How cost is measured
 
-**In dollars**, from Featherless's own billing of your per-model usage, priced at the
+**In dollars**, metered by us on every call your agent makes, priced at the
 table in `docs/models.md`. Nothing to report. We look at dollars per case (the main
 number), dollars per correct answer, and the spread — one case costing 40× the median
 usually means an agent with no stopping condition.
@@ -125,7 +125,8 @@ OpenRCA is on GitHub and its answers are a download away. So:
   renamed — that's your accuracy score — and once on the same 20 as originally published.
   The difference is published beside your accuracy. A large gap can also
   mean an agent overfitted to naming conventions — a real finding about the agent.
-- **Your run is sandboxed.** No answer files on the machine; network to Featherless only.
+- **Your run is sandboxed.** No answer files on the machine, and no route out of the
+  container except the model endpoint in `FEATHERLESS_BASE_URL`.
 
 And accuracy is only 20%. A lookup table can't explain itself or show an eval — it fails
 the other 80% on its own.

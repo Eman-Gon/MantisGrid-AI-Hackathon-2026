@@ -40,7 +40,7 @@ GLM family, and the scorer.
 
 ## What you hand in
 
-A repository with a Dockerfile. We build it and run it on our Featherless key — your
+A repository with a Dockerfile. We build it and run it on our own account — your
 credit is never spent on judging. Your agent reads the key from `FEATHERLESS_API_KEY`
 and writes `predictions.csv` plus one `evidence/<row_id>.md` per case.
 

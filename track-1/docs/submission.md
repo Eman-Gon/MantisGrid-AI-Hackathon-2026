@@ -58,8 +58,9 @@ So your agent must:
   `FEATHERLESS_BASE_URL` if it's set (default `https://api.featherless.ai/v1`). Never
   hard-code a key. That's how we run you on our key — your credit isn't spent on judging.
 - **Read only from `--dataset`**, and **write only into `--out`**.
-- **Reach only Featherless.** During evaluation the network allows
-  `api.featherless.ai` and nothing else.
+- **Reach only the endpoint we give you.** During evaluation your container has no
+  other route out — no package installs, no downloads, no other API. Take the host
+  from `FEATHERLESS_BASE_URL`; anything that hard-codes one fails here.
 - **Run unattended.** No prompts, no manual steps, no notebook.
 - **Choose its own models** from the GLM family, per call — see `docs/models.md`.
 - **Stay within the limits:** 10 minutes and $3 per case, and $25 for the whole run of
@@ -125,7 +126,7 @@ we don't score from it.
 | `predictions.csv` | `starter/score.py` — the benchmark's own `evaluate.py`, unchanged; the same file `make score` runs. On cases your agent hasn't seen, renamed (`docs/scoring.md`) | 20% |
 | `evidence/` | judges, checked against the raw telemetry | 35% |
 | `REPORT.md` and `eval/` | judges | 25% |
-| cost | Featherless's billing of our key during your run, priced at the table in `docs/models.md` | 20% |
+| cost | our metering of every call your agent makes, priced at the table in `docs/models.md` | 20% |
 
 ## Check it before you submit
 
