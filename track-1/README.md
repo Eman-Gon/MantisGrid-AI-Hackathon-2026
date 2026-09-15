@@ -42,7 +42,11 @@ GLM family, and the scorer.
 
 A repository with a Dockerfile. We build it and run it on our Featherless key — your
 credit is never spent on judging. Your agent reads the key from `FEATHERLESS_API_KEY`
-and writes `predictions.csv` plus one `evidence/<row_id>.md` per case. Details:
+and writes `predictions.csv` plus one `evidence/<row_id>.md` per case.
+
+**Submit through https://forms.gle/UbPSwZhKNfkovM8s5, before September 17, 2026,
+3:00pm PDT.** The form also asks for your team, your project title, and a
+presentation of three minutes or less showing the project working. Details:
 `docs/submission.md`.
 
 ## How you're judged

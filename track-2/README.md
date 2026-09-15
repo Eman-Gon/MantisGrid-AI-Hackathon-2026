@@ -43,7 +43,12 @@ should be querying within five minutes of having the data.
 ## What you hand in
 
 A repository we can run with one command, serving your dashboard on `:3000`, plus a
-`claims.json` with your numbers and a `REPORT.md`. Details: `docs/submission.md`.
+`claims.json` with your numbers and a `REPORT.md`.
+
+**Submit through https://forms.gle/UbPSwZhKNfkovM8s5, before September 17, 2026,
+3:00pm PDT.** The form also asks for your team, your project title, and a
+presentation of three minutes or less showing the project working. Details:
+`docs/submission.md`.
 
 ## How you're judged
 

@@ -72,8 +72,8 @@ In exchange, we require transparency:
 
 ## 7\. Submissions
 
-Submit before September 17, 2026 3:00pm PDT. Late submissions are not judged.
-A complete submission includes:
+Submit at https://forms.gle/UbPSwZhKNfkovM8s5 before September 17, 2026 3:00pm
+PDT. Late submissions are not judged. A complete submission includes:
 
 1. Team information (all members, with student/career status).  
 2. Project title and description, including your chosen track.  

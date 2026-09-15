@@ -14,8 +14,29 @@ submission/
 `starter/` is already this shape — Dockerfile, `run.py`, an example agent — so start
 from it. Keep `run.py`'s command line as it is; change the agent.
 
-**To hand it in:** the repository URL and the commit to judge.
-`<deadline and where to send it — TBD>`
+## Handing it in
+
+**One form, before September 17, 2026, 3:00pm PDT** — the moment the event ends.
+Late submissions are not judged.
+
+**https://forms.gle/UbPSwZhKNfkovM8s5**
+
+It asks for four things:
+
+1. **Your team** — every member, each with their student or career status.
+2. **Project title and description**, and which track you are in.
+3. **The repository** — public, with keys and secrets removed, and the commit you
+   want judged. Its README must list the AI models, coding assistants and agent
+   frameworks you used, and say briefly what was AI-generated and what the team
+   wrote. Using AI heavily is expected here; not disclosing it is the problem.
+4. **A presentation, three minutes or less**, showing the project actually working.
+   A demo is strongly encouraged.
+
+In English. One project, one track — if your work draws on both, tell us which
+track's judging focus to apply.
+
+After the deadline you may fix bugs and repair a broken deployment. You may not add
+features.
 
 ## How we run it
 
