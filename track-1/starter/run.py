@@ -21,6 +21,7 @@ from __future__ import annotations
 import argparse
 import importlib
 import json
+import os
 import time
 import traceback
 from dataclasses import dataclass, field
@@ -131,8 +132,12 @@ def main() -> None:
         with (out / "usage.jsonl").open("a") as fh:
             fh.write(json.dumps({k: v for k, v in rec.items() if k != "prediction"}
                                 | {"models": models}) + "\n")
-        # written every case: a run that dies at case 60 keeps the first 59
-        pd.DataFrame(rows).sort_values("row_id").to_csv(pred_path, index=False)
+        # Written after every case: a run that stops at case 60 keeps the first 59.
+        # Via a temp file and a rename, because the judged run is stopped at a hard
+        # time limit and a half-written predictions.csv would lose the lot.
+        tmp = pred_path.with_suffix(".csv.tmp")
+        pd.DataFrame(rows).sort_values("row_id").to_csv(tmp, index=False)
+        os.replace(tmp, pred_path)
         print(f"  row {rid:>3}  {wall:6.1f}s  {rec['prompt_tokens']:>8,} tok  "
               f"{(sol.prediction or '')[:60].replace(chr(10),' ')}")
 
