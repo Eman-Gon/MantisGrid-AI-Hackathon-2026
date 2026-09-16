@@ -66,10 +66,11 @@ So your agent must:
   HTTP 200 with an error body. Retry, fall back to another model in the
   family, and keep going — `docs/models.md`.
 - **Choose its own models** from the GLM family, per call — see `docs/models.md`.
-- **Stay within the limits:** 10 minutes and $3 per case, and $25 for the whole run of
-  20 cases (`docs/models.md`). A case that goes over scores zero and the run moves on;
-  a run that reaches $25 stops, and the cases it didn't reach score zero. We run it
-  twice — on renamed cases and on the originals (`docs/scoring.md`) — with $25 each.
+- **Stay within the limits:** 10 minutes and $3 per case, and **20 minutes** and $25 for
+  the whole run of 20 cases (`docs/models.md`). A case that goes over scores zero and the
+  run moves on; a run that reaches either total stops where it is, and the cases it didn't
+  reach score zero. Twenty minutes over twenty cases is the one most likely to bind — a
+  minute a case, on average.
 - **Fit the machine:** `<CPU and memory — TBD>`.
 
 ## What it must write

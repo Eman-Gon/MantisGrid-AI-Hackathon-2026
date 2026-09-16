@@ -123,17 +123,23 @@ if it's also right.
 | **Cost per case** | **$3**, priced as above |
 | **Time per case** | 10 minutes |
 | **Exceeding either** | that case scores zero; the run continues |
-| **Cost per run** | **$25** for the 20 judged cases, priced as above — for each of the two runs (`docs/scoring.md`) |
-| **Exceeding it** | the run stops; the cases not yet reached score zero |
+| **Cost per run** | **$25** for the 20 judged cases, priced as above |
+| **Time per run** | **20 minutes** for all 20 cases |
+| **Exceeding either** | the run stops where it is; the cases not yet reached score zero |
 
 $25 over 20 cases is **$1.25 per case on average** — more than an agent that runs every
 call on GLM-5.2 spends on a typical case (about $0.81), so it only binds an agent that is
 heavy across the board. The cases run in a fixed order, the same for every team.
 
-The per-case limits exist to stop runaway loops, not to push you towards cheap models —
-cost is scored separately. We enforce them from outside your agent, so you can't change them;
-give your agent its own stop well below them, so a loop costs you nothing worse than a
-weaker answer.
+**Twenty minutes is one minute a case, and it is the limit most likely to bind.** It is
+not there to stop runaway loops — the per-case limits do that — it is there because every
+submission is judged in one sitting and the sitting is an hour. Budget for it: an agent
+averaging three minutes a case finishes seven of twenty and scores zero on the rest, however
+good those seven are. `run.py` writes `predictions.csv` after every case, so whatever you
+finished before the limit still counts.
+
+We enforce all of these from outside your agent, so you can't change them; give your agent
+its own stop well below them, so a loop costs you nothing worse than a weaker answer.
 
 ## Your budget
 
