@@ -56,7 +56,7 @@ presentation of three minutes or less showing the project working. Details:
 | **Accuracy** on cases your agent hasn't seen | 20% |
 | **Evidence and explainability** — can you show why? | 35% |
 | **Evaluation quality** — your harness and your comparisons | 25% |
-| **Cost efficiency** — dollars per case, read alongside accuracy | 20% |
+| **Cost efficiency** — dollars and wall-clock, read alongside accuracy | 20% |
 
 The state of the art gets about **one case in nine**, so most answers will be wrong.
 Build for that. Full detail: `docs/scoring.md`
@@ -73,4 +73,5 @@ Build for that. Full detail: `docs/scoring.md`
 
 ## Questions
 
-Ask. We'd much rather explain the domain than watch you lose a day to a timezone.
+Ask. We'd rather explain the domain than have you lose hours to something we
+could clear up in a minute.

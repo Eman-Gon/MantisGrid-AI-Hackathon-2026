@@ -129,7 +129,7 @@ we don't score from it.
 | `predictions.csv` | `starter/score.py` — the benchmark's own `evaluate.py`, unchanged; the same file `make score` runs. On cases your agent hasn't seen, renamed (`docs/scoring.md`) | 20% |
 | `evidence/` | judges, checked against the raw telemetry | 35% |
 | `REPORT.md` and `eval/` | judges | 25% |
-| cost | our metering of every call your agent makes, priced at the table in `docs/models.md` | 20% |
+| cost | dollars, from our metering of every call, priced at the table in `docs/models.md`; and wall-clock time per case and per run | 20% |
 
 ## Check it before you submit
 

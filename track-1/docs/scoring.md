@@ -79,16 +79,32 @@ A shot in the dark and a narrowed hypothesis are different — say which is whic
 
 ## How cost is measured
 
-**In dollars**, metered by us on every call your agent makes, priced at the
-table in `docs/models.md`. Nothing to report. We look at dollars per case (the main
-number), dollars per correct answer, and the spread — one case costing 40× the median
-usually means an agent with no stopping condition.
+**In dollars and in time.** Both are ours to measure — nothing for you to report.
 
-What moves you up: **routing that measurably saves money without losing accuracy**,
-compared against running everything on one model. So do caching of the parts that repeat
+**Dollars** are metered on every call your agent makes, priced at the table in
+`docs/models.md`. We look at dollars per case (the main number), dollars per correct
+answer, and the spread — one case costing 40× the median usually means an agent with
+no stopping condition.
+
+**Time** is wall-clock, per case and across the run. An answer that takes an hour is a
+different product from the same answer in five minutes, and on-call is where this
+track's work would actually land. The 10-minute limit is a floor on acceptable, not the
+thing being measured.
+
+The two usually move together, and for the same reason: output tokens on an expensive
+model are both the priciest and the slowest thing an agent does, because they are
+generated one at a time. An agent that sends its long generation — writing up the
+evidence, say — to a cheap model while keeping the expensive one for the short
+reasoning step pays less *and* finishes sooner. That is one decision buying both.
+
+What moves you up: **routing that measurably saves money and time without losing
+accuracy**, compared against running everything on one model. So do caching of the parts that repeat
 every case (schema, tool definitions, scaffolding), cheap triage before expensive
 reasoning, and stopping early when the evidence is conclusive — each with before-and-after
 numbers, not an assertion.
+
+Report seconds alongside dollars in your own eval. If a change saved money and cost
+time, say so — we would rather read that trade-off than not see it.
 
 ## Your eval
 
