@@ -78,7 +78,10 @@ So your agent must:
   run moves on; a run that reaches either total stops where it is, and the cases it didn't
   reach score zero. Twenty minutes over twenty cases is the one most likely to bind — a
   minute a case, on average.
-- **Fit the machine:** `<CPU and memory — TBD>`.
+- **Fit the machine: 2 CPUs and 8 GB, no GPU.** The dataset is far larger than that,
+  so read it in pieces — the reference agent peaks under 2 GB by loading only the
+  columns and days it needs. A container that asks for more is killed and the cases it
+  had not reached score zero.
 
 ## What it must write
 
