@@ -127,7 +127,7 @@ we don't score from it.
 
 | What | Scored by | Weight |
 |---|---|---|
-| `predictions.csv` | `starter/score.py` — the benchmark's own `evaluate.py`, unchanged; the same file `make score` runs. On cases your agent hasn't seen, renamed (`docs/scoring.md`) | 20% |
+| `predictions.csv` | `starter/score.py` — the benchmark's own `evaluate.py`, unchanged; the same file `make score` runs. On cases your agent hasn't seen (`docs/scoring.md`) | 20% |
 | `evidence/` | judges, checked against the raw telemetry | 35% |
 | `REPORT.md` and `eval/` | judges | 25% |
 | cost | dollars, from our metering of every call, priced at the table in `docs/models.md`; and wall-clock time per case and per run | 20% |

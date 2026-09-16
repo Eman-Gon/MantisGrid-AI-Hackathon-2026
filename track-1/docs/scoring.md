@@ -42,8 +42,9 @@ models are far stronger than 2025's, but nobody yet knows where GLM lands here.
 ## How accuracy is measured
 
 On **20 cases**, the same 20 for every team, from a different deployment of the same
-system (renamed — see the end of this page). They cover every task type, and include
-every hard case that deployment has. Scored with the benchmark's own `main/evaluate.py`,
+system — one you do not have. They cover every task type, and include every hard case
+that deployment has. We don't say which cases, or how many of each kind, until
+afterwards. Scored with the benchmark's own `main/evaluate.py`,
 unchanged, reported as **strict** and **partial**, and per task type. It has sharp edges, and each of these gives you zero on
 a correct diagnosis:
 
@@ -133,14 +134,14 @@ your number here is an estimate — the gap between it and ours is worth reporti
 OpenRCA is on GitHub and its answers are a download away. So:
 
 - **You submit an agent, not predictions.** We run it.
-- **We evaluate on renamed data.** Components are consistently renamed and timestamps
-  shifted by whole days; topology, timing and difficulty are preserved. An agent that
-  reads the telemetry is unaffected. One carrying memorised answers names things that no
-  longer exist.
-- **We run you twice, report the gap, and don't accuse anyone.** Once on the 20 cases
-  renamed — that's your accuracy score — and once on the same 20 as originally published.
-  The difference is published beside your accuracy. A large gap can also
-  mean an agent overfitted to naming conventions — a real finding about the agent.
+- **We score you on a deployment you don't have**, and we don't say which of its cases
+  until afterwards. The failures are the same kinds, the components are not the same
+  components, and the answers to *these* cases are not in the bundle you downloaded.
+- **We run your agent more than once, under conditions we don't describe**, to
+  establish that your score came from reading the telemetry rather than from anything
+  carried in. If it did, you will never notice this happening. We publish what we find
+  and we accuse nobody — a gap can also mean an agent leaned on a naming convention,
+  which is a real finding about the agent rather than about the team.
 - **Your run is sandboxed.** No answer files on the machine, and no route out of the
   container except the model endpoint in `FEATHERLESS_BASE_URL`.
 

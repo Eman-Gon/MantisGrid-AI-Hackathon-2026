@@ -21,8 +21,8 @@ data/Market-cloudbed-1/
 
 You have every answer. **We don't score you on this deployment**: we score on another
 deployment of the same shop — the same software and the same kinds of failure, but a
-different set of components, some of which you won't have seen, all renamed — on 20
-of its cases. So these
+different set of components, many of which you won't have seen — on 20 of its cases,
+and we don't say which 20. So these
 70 cases are yours to develop against; tune on all of them and hold some back if you
 want an honest estimate before we measure it.
 
