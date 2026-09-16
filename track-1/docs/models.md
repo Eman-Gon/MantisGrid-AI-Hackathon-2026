@@ -61,6 +61,45 @@ ask("zai-org/GLM-5.2",       [...])   # expensive: the reasoning that decides th
 `starter/llm.py` wraps this and counts tokens per model; `starter/cost.py` turns the
 counts into dollars at the table above; `starter/agents/routed.py` puts both to work.
 
+## When a model is unavailable
+
+In production, models can become temporarily unavailable but service should not stop.
+Treat that as part of the problem, not an accident of the day.
+
+Capacity errors come back with **HTTP 200**, not 503 — the status line says success and
+the body carries the error:
+
+```json
+{"error": {"message": "This model is busy, please try again later.",
+           "type": "server_error", "code": "completion_error"}}
+```
+
+There is no `choices` key in that response, so code that reaches straight for
+`response.choices[0].message.content` raises an exception instead of seeing the error.
+
+What a resilient agent does:
+
+- **Check for `error` before reading `choices`.** A 200 is not a success.
+- **Retry the same model a few times, with a growing pause.** Most capacity errors clear
+  on their own, and a failed call returns no `usage` — so retries cost you nothing.
+- **Then fall back to another model in the family.** Name a second choice for each tier,
+  a cheap one and a strong one, rather than routing every call of a kind to a single
+  point of failure.
+- **Stop retrying a model that stays down.** Retries cost nothing in dollars — a failed
+  call carries no `usage` — but they spend the case's ten-minute clock, and an
+  unavailable model is usually unavailable for minutes. Rediscovering that on every
+  call is how a run times out while billing nothing. Drop a model after a couple of
+  failures and stop offering it.
+- **Degrade, don't die.** A case that cannot reach its model should still write an answer
+  and an evidence file saying what happened. One unavailable model must not end a run.
+
+`starter/llm.py` does the retry, the fallback and the giving-up for you — `ask()` takes a
+list of models and walks down it, and drops one that has failed twice. Read it before you trust it; the policy it picks is a starting point,
+not the only sensible one.
+
+Availability moves. Check before a long run, and don't assume the model you developed
+against is the one serving you an hour later.
+
 ## How cost is measured
 
 **In dollars, not tokens.** An input token on GLM-5.2 costs about 21× one on Flash

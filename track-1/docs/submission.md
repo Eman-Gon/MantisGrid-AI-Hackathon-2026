@@ -62,6 +62,9 @@ So your agent must:
   other route out — no package installs, no downloads, no other API. Take the host
   from `FEATHERLESS_BASE_URL`; anything that hard-codes one fails here.
 - **Run unattended.** No prompts, no manual steps, no notebook.
+- **Survive a model going away.** Capacity errors arrive mid-run, as
+  HTTP 200 with an error body. Retry, fall back to another model in the
+  family, and keep going — `docs/models.md`.
 - **Choose its own models** from the GLM family, per call — see `docs/models.md`.
 - **Stay within the limits:** 10 minutes and $3 per case, and $25 for the whole run of
   20 cases (`docs/models.md`). A case that goes over scores zero and the run moves on;

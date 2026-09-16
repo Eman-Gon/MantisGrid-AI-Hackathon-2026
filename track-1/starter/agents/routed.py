@@ -34,14 +34,19 @@ from run import Solution, format_prediction               # noqa: E402
 from agents.heuristic import (NODE_REASONS, POD_REASONS,  # noqa: E402
                               Analysis, analyse, answer_for, solve as baseline)
 
-CHEAP = "zai-org/GLM-4.7-Flash"
-STRONG = "zai-org/GLM-5.2"
+# Preference order per tier, not one model. A busy provider is a normal event and
+# llm.ask() walks down the list -- see "When a model is unavailable" in
+# docs/models.md. Picking the second name is a real decision: it should be close in
+# capability to the first, or the fallback quietly changes what your agent is.
+CHEAP = ["zai-org/GLM-4.7-Flash", "zai-org/GLM-5.3-Flash"]
+STRONG = ["zai-org/GLM-5.2", "zai-org/GLM-5.1"]
 CANDIDATES = 10          # components shown to the strong model
 KPIS_EACH = 3            # strongest KPIs shown per component
 
 
-def _model(role: str) -> str:
-    return os.environ.get("RCA_MODEL") or role
+def _model(tier: list[str]) -> list[str]:
+    """RCA_MODEL pins one model for an ablation; otherwise the tier's own order."""
+    return [os.environ["RCA_MODEL"]] if os.environ.get("RCA_MODEL") else tier
 
 
 def _json(text: str) -> dict:

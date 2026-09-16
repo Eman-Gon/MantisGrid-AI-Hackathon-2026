@@ -87,8 +87,9 @@ at case 60 keeps the first 59, and `--resume` picks up where it stopped.
 ## The routed example
 
 `agents/routed.py` shows the plumbing, not a good agent. On top of the baseline's
-ranking it makes three calls per case: GLM-4.7-Flash reads the question, GLM-5.2
-picks the root cause from the ranked candidates, and Flash writes the evidence file.
+ranking it makes three calls per case: a cheap model reads the question, a strong one
+picks the root cause from the ranked candidates, and a cheap one writes the evidence
+file. Each tier names a fallback model, so a busy provider does not end the run.
 It checks the pick against the data and keeps the baseline's answer if a call fails.
 
 ```bash
