@@ -72,4 +72,5 @@ presentation of three minutes or less showing the project working. Details:
 
 ## Questions
 
-Ask. We'd rather explain the domain than watch you lose an afternoon to a column name.
+Ask. We'd rather explain the domain than have you lose hours to something we
+could clear up in a minute.
