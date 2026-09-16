@@ -14,6 +14,10 @@ submission/
 `starter/` is already this shape — Dockerfile, `run.py`, an example agent — so start
 from it. Keep `run.py`'s command line as it is; change the agent.
 
+**Put the Dockerfile at the repository root.** If your project lives in a subfolder,
+that is the only Dockerfile in the repository and we will find it — but a repository
+with two of them is ambiguous and we may build the wrong one.
+
 ## Handing it in
 
 **One form, before September 17, 2026, 3:00pm PDT** — the moment the event ends.
@@ -25,10 +29,13 @@ It asks for four things:
 
 1. **Your team** — every member, each with their student or career status.
 2. **Project title and description**, and which track you are in.
-3. **The repository** — public, with keys and secrets removed, and the commit you
-   want judged. Its README must list the AI models, coding assistants and agent
-   frameworks you used, and say briefly what was AI-generated and what the team
-   wrote. Using AI heavily is expected here; not disclosing it is the problem.
+3. **The repository** — public, with keys and secrets removed. **We judge whatever
+   the link shows when we open it**: the default branch, at its latest commit when we
+   clone. There is no commit to nominate, so make sure the work you want judged is
+   merged and pushed before the deadline. Its README must list the AI models, coding
+   assistants and agent frameworks you used, and say briefly what was AI-generated and
+   what the team wrote. Using AI heavily is expected here; not disclosing it is the
+   problem.
 4. **A presentation, three minutes or less**, showing the project actually working.
    A demo is strongly encouraged.
 

@@ -12,7 +12,7 @@ hankunli@mantisgrid.ai — asking first is never penalized.
 ## 2\. Eligibility
 
 Participants must be 18 or older to be eligible for prizes. Organizers, judges,
-mentors, employees of MantisGrid and event sponsors, and their immediate
+mentors, employees of MantisGrid AI and event sponsors, and their immediate
 families may not compete, but are welcome as mentors, volunteers, and judges. 
 
 ## 3\. Teams
@@ -92,6 +92,10 @@ Technical Execution (40%), Innovation / Wow Factor (30%), Potential Impact
 (20%), Presentation / Demo (10%). Track-specific judging focus (data
 storytelling; routing logic and explainability; usefulness on a real standard)
 is applied within these criteria.
+
+Track 1: model accuracy, explanability, strength of evaluations, token usage.
+Track 2: use of MantisGrid AI/MCP, explanability of insights based on available
+evidence, token usage.
 
 Awards: Best Overall Project, Best of Track, Most Innovative of Track, Each
 team is eligible to win at most one award. 

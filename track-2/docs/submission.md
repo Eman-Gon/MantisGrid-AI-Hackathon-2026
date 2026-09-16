@@ -12,8 +12,10 @@ submission/
 ```
 
 Building on this folder is the easy way: it already has the compose file, the API and
-`data/`. Keep `docker-compose.yml`, `claims.json` and `REPORT.md` at the root, or tell us
-which folder to run from when you hand it in.
+`data/`. **Keep `docker-compose.yml`, `claims.json` and `REPORT.md` at the repository
+root.** If your project lives in a subfolder, that has to be the only
+`docker-compose.yml` in the repository — there is nowhere on the form to tell us which
+one to use.
 
 ## Handing it in
 
@@ -26,10 +28,13 @@ It asks for four things:
 
 1. **Your team** — every member, each with their student or career status.
 2. **Project title and description**, and which track you are in.
-3. **The repository** — public, with keys and secrets removed, and the commit you
-   want judged. Its README must list the AI models, coding assistants and agent
-   frameworks you used, and say briefly what was AI-generated and what the team
-   wrote. Using AI heavily is expected here; not disclosing it is the problem.
+3. **The repository** — public, with keys and secrets removed. **We judge whatever
+   the link shows when we open it**: the default branch, at its latest commit when we
+   clone. There is no commit to nominate, so make sure the work you want judged is
+   merged and pushed before the deadline. Its README must list the AI models, coding
+   assistants and agent frameworks you used, and say briefly what was AI-generated and
+   what the team wrote. Using AI heavily is expected here; not disclosing it is the
+   problem.
 4. **A presentation, three minutes or less**, showing the project actually working.
    A demo is strongly encouraged.
 
