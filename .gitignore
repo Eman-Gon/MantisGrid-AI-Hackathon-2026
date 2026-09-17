@@ -13,3 +13,6 @@ __pycache__/
 .DS_Store
 claims.json
 out/
+
+# eval outputs stay local; tables go into REPORT.md
+eval/results*/
