@@ -251,6 +251,230 @@ class TraceDetectorTests(unittest.TestCase):
 
 
 class EventRankerTests(unittest.TestCase):
+    def test_same_reason_propagation_yields_slot_to_independent_earlier_event(
+        self,
+    ) -> None:
+        candidates = [
+            _candidate(
+                component="emailservice-0",
+                onset=700.0,
+                score=10.0,
+                reason="container write I/O load",
+                event_id="write-0",
+                modality="metric",
+                fact_id="fact-write-0",
+            ),
+            _candidate(
+                component="emailservice-1",
+                onset=700.0,
+                score=10.0,
+                reason="container write I/O load",
+                event_id="write-1",
+                modality="metric",
+                fact_id="fact-write-1",
+            ),
+            _candidate(
+                component="emailservice2-0",
+                onset=730.0,
+                score=9.0,
+                reason="container write I/O load",
+                event_id="write-propagation",
+                modality="metric",
+                fact_id="fact-write-propagation",
+            ),
+            _candidate(
+                component="emailservice-0",
+                onset=100.0,
+                score=7.0,
+                reason="container read I/O load",
+                event_id="read-0",
+                modality="metric",
+                fact_id="fact-read-0",
+            ),
+            _candidate(
+                component="emailservice-1",
+                onset=100.0,
+                score=7.0,
+                reason="container read I/O load",
+                event_id="read-1",
+                modality="metric",
+                fact_id="fact-read-1",
+            ),
+        ]
+
+        ranked = rank_events(candidates, 2)
+
+        self.assertEqual([event.component for event in ranked], ["emailservice"] * 2)
+        self.assertEqual(
+            {event.reason_candidates[0] for event in ranked},
+            {"container write I/O load", "container read I/O load"},
+        )
+        self.assertEqual({event.onset_epoch_s for event in ranked}, {100.0, 700.0})
+        self.assertNotIn(
+            "write-propagation", {event.event_id for event in ranked}
+        )
+
+    def test_independence_filter_backfills_and_keeps_other_reason_at_same_time(
+        self,
+    ) -> None:
+        write = _candidate(
+            component="emailservice",
+            onset=700.0,
+            score=10.0,
+            reason="container write I/O load",
+            event_id="write",
+            modality="metric",
+            fact_id="fact-write",
+        )
+        propagation = _candidate(
+            component="emailservice2-0",
+            onset=730.0,
+            score=9.0,
+            reason="container write I/O load",
+            event_id="propagation",
+            modality="metric",
+            fact_id="fact-propagation",
+        )
+        read = _candidate(
+            component="emailservice3-0",
+            onset=700.0,
+            score=8.0,
+            reason="container read I/O load",
+            event_id="read",
+            modality="metric",
+            fact_id="fact-read",
+        )
+
+        self.assertEqual(
+            {event.event_id for event in rank_events([write, propagation], 2)},
+            {"write", "propagation"},
+        )
+        self.assertEqual(
+            [event.event_id for event in rank_events([write, propagation, read], 2)],
+            ["write", "read"],
+        )
+
+    def test_sibling_replicas_coalesce_but_later_service_event_stays_distinct(
+        self,
+    ) -> None:
+        candidates = [
+            _candidate(
+                component="emailservice-0",
+                onset=100.0,
+                score=8.0,
+                reason="container write I/O load",
+                event_id="email-early-0",
+                modality="metric",
+                fact_id="fact-email-early-0",
+            ),
+            _candidate(
+                component="emailservice-1",
+                onset=130.0,
+                score=7.0,
+                reason="container write I/O load",
+                event_id="email-early-1",
+                modality="metric",
+                fact_id="fact-email-early-1",
+            ),
+            _candidate(
+                component="emailservice-1",
+                onset=640.0,
+                score=6.0,
+                reason="container write I/O load",
+                event_id="email-late-1",
+                modality="metric",
+                fact_id="fact-email-late-1",
+            ),
+            _candidate(
+                component="emailservice-2",
+                onset=670.0,
+                score=5.0,
+                reason="container write I/O load",
+                event_id="email-late-2",
+                modality="metric",
+                fact_id="fact-email-late-2",
+            ),
+        ]
+
+        ranked = rank_events(reversed(candidates), 2)
+
+        self.assertEqual(len(ranked), 2)
+        self.assertEqual([event.component for event in ranked], ["emailservice"] * 2)
+        self.assertEqual({event.onset_epoch_s for event in ranked}, {100.0, 640.0})
+        self.assertEqual(len({event.event_id for event in ranked}), 2)
+        by_onset = {event.onset_epoch_s: event for event in ranked}
+        self.assertEqual(
+            by_onset[100.0].alternatives,
+            ("emailservice-0", "emailservice-1"),
+        )
+        self.assertEqual(
+            by_onset[640.0].alternatives,
+            ("emailservice-1", "emailservice-2"),
+        )
+        self.assertEqual(dict(by_onset[100.0].feature_scores)["replica_support"], 2.0)
+
+    def test_nodes_single_pods_and_different_reason_families_stay_exact(self) -> None:
+        candidates = [
+            _candidate(
+                component="node-1",
+                onset=100.0,
+                score=5.0,
+                reason="node CPU load",
+                event_id="node-1",
+                modality="metric",
+                fact_id="fact-node-1",
+            ),
+            _candidate(
+                component="node-2",
+                onset=100.0,
+                score=5.0,
+                reason="node CPU load",
+                event_id="node-2",
+                modality="metric",
+                fact_id="fact-node-2",
+            ),
+            _candidate(
+                component="cartservice-0",
+                onset=100.0,
+                score=5.0,
+                reason="container CPU load",
+                event_id="cart-cpu",
+                modality="metric",
+                fact_id="fact-cart-cpu",
+            ),
+            _candidate(
+                component="cartservice-1",
+                onset=100.0,
+                score=5.0,
+                reason="container memory load",
+                event_id="cart-memory",
+                modality="metric",
+                fact_id="fact-cart-memory",
+            ),
+            _candidate(
+                component="paymentservice-0",
+                onset=100.0,
+                score=5.0,
+                reason="container CPU load",
+                event_id="single-pod",
+                modality="metric",
+                fact_id="fact-single-pod",
+            ),
+        ]
+
+        ranked = rank_events(candidates, len(candidates))
+
+        self.assertEqual(
+            {event.component for event in ranked},
+            {
+                "node-1",
+                "node-2",
+                "cartservice-0",
+                "cartservice-1",
+                "paymentservice-0",
+            },
+        )
+
     def test_requested_two_can_be_two_events_on_same_component(self) -> None:
         first = _candidate(
             component="shippingservice-1",

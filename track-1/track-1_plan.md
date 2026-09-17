@@ -414,14 +414,40 @@ Four-minute flow:
 
 Working and reproducible beats feature breadth. Do not start Track 2 work from this plan.
 
-## 13. Progress ledger
+## 13. Timeline
 
-| Gate | Status | Evidence / commit |
-|---|---|---|
-| Plan revision | Complete | This document; incorporates master reference and repository audit |
-| Gate A — runnable release skeleton | Pending | — |
-| Gate B — end-to-end product | Pending | — |
-| Gate C — harden and freeze | Pending | — |
-| Evaluation | Pending | — |
-| Release | Pending | — |
-| Form submitted | Pending | — |
+This is the quick visual record of the team's current position. Keep exactly one
+**← CURRENT** marker while work remains. Move it only after the current row's pass
+condition has been met and its output has been inspected. When a row finishes, change
+`[ ]` to `[x]` and record the actual start and finish times in PDT. Use `[-]` for a
+deliberately cut phase and explain the cut in `REPORT.md`.
+
+**Current position:** Gate A — runnable release skeleton.
+
+| Done | Phase | Target | Started (PDT) | Finished (PDT) | Status / evidence / commit |
+|---|---|---:|---|---|---|
+| [x] | Plan revision | 11:00 AM | 10:45 AM | ~11:00 AM | Complete; this document incorporates the repository audit and official Track 1 docs |
+| [ ] | Gate A — runnable release skeleton | 11:25 AM | — | — | ← **CURRENT**; pending exact entrypoint, environment, data, and Docker proof |
+| [ ] | Gate B — end-to-end product | 12:35 PM | — | — | Pending Gate A |
+| [ ] | Gate C — harden and freeze | 1:20 PM | — | — | Pending Gate B |
+| [ ] | Evaluation | 1:55 PM | — | — | Pending Gate C; use the same fixed cases for every configuration |
+| [ ] | Release | 2:35 PM | — | — | Pending evaluation; requires the exact clean-clone judge command |
+| [ ] | Form submitted | 2:15 PM | — | — | Pending repository and presentation links; do not wait for the release deadline |
+| [ ] | Demo rehearsal and final check | 2:50 PM | — | — | Pending; four-minute timed rehearsal and final `main` verification |
+
+### Timeline completion note
+
+Add a note like this beneath the table whenever a phase finishes:
+
+```markdown
+#### YYYY-MM-DD HH:MM PDT — <phase> completed
+- Started: HH:MM PDT
+- Finished: HH:MM PDT
+- Acceptance commands: <exact commands>
+- Measured results: <elapsed time, peak RSS, cost, scores, or output counts>
+- Output inspected: <specific files and rows opened>
+- Commit: <hash or "not committed">
+- Cross-review: <reviewer and result>
+- Remaining risks: <specific gaps or "none known">
+- Next current phase: <phase>
+```
