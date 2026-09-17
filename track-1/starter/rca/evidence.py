@@ -8,6 +8,7 @@ scored and compared; anything else is "could not be ruled out".
 """
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping, Sequence
 
 from .contracts import (
@@ -20,6 +21,7 @@ from .contracts import (
 
 MAX_FACTS_PER_HYPOTHESIS = 6
 MAX_RULED_OUT = 6
+_POD = re.compile(r"^(.+)-(\d+)$")
 
 
 def _num(x) -> str:
@@ -96,7 +98,9 @@ def render(case: CaseSpec, hypotheses: Sequence[Hypothesis],
                else f"chosen by `{h.model_used}`")
         line = (f"{i}. **{_confidence_word(h.confidence)}** ({h.confidence:.2f}) — {how}; "
                 f"{n} supporting fact(s) from {', '.join(sorted(src)) or 'no source'}.")
-        cand = next((c for c in ranked if c.component == h.component and c.alternatives), None)
+        # a service-level answer (no replica suffix) carries its replicas as alternatives
+        cand = next((c for c in ranked if c.component == h.component and c.alternatives
+                     and not _POD.match(h.component)), None)
         if cand:
             line += (f" Service-level: replicas {', '.join(f'`{p}`' for p in cand.alternatives)} "
                      f"deviated together, so the fault is placed on the service.")

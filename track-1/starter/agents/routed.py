@@ -25,7 +25,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from llm import LLM                                          # noqa: E402
 from run import Solution, format_prediction                  # noqa: E402
-from rca import collapse, evidence, route                    # noqa: E402
+from rca import evidence, route                              # noqa: E402
 from rca.contracts import CaseSpec, format_utc8, parse_case  # noqa: E402
 from rca.detect_metrics import detect_metrics                # noqa: E402
 from rca.detect_traces import detect_traces                  # noqa: E402
@@ -94,10 +94,10 @@ def solve(instruction: str, dataset_dir: Path, ctx: dict) -> Solution:
         ranked = rank_events((*mc, *tc), failure_count=max(RANKED, spec.failure_count))
         notes.append(f"detectors: {len(mc)} metric + {len(tc)} trace candidate(s), "
                      f"{len(facts)} fact(s); {len(ranked)} ranked")
-        ranked, cn = collapse.collapse(ranked, run.telemetry_components, spec.row_id)
-        notes += list(cn)
         notes += [f"prepare: {w}" for w in pc.warnings]
-        components = frozenset(run.telemetry_components) | collapse.service_names(run.telemetry_components)
+        # rank.py coalesces replicas into a service-level candidate (component
+        # without a replica suffix); those names are legal answers too
+        components = frozenset(run.telemetry_components) | {c.component for c in ranked}
     except Exception:
         from agents.heuristic import solve as baseline
         sol = baseline(instruction, dataset_dir, ctx)

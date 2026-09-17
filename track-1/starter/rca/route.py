@@ -82,7 +82,7 @@ def describe(case: CaseSpec, ranked: Sequence[CandidateEvent],
     lines = []
     for i, c in enumerate(ranked[:SHOWN]):
         level = (f"  SERVICE-LEVEL: replicas {list(c.alternatives)} all deviated together"
-                 if c.alternatives else "")
+                 if c.alternatives and not re.match(r"^(.+)-(\d+)$", c.component) else "")
         lines.append(f"[{i}] {c.component}  onset={format_utc8(c.onset_epoch_s)}  "
                      f"score={c.score:.2f}  modality={c.modality or '?'}  "
                      f"reasons={list(c.reason_candidates[:3])}{level}")
