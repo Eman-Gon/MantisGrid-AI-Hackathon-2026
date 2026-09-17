@@ -12,6 +12,7 @@ is never rejected, which matters for node faults and incomplete parent caches.
 from __future__ import annotations
 
 import math
+import re
 from collections.abc import Iterable, Sequence
 
 from .contracts import CandidateEvent, CaseSpec, stable_event_id
@@ -212,6 +213,108 @@ def _fuse_cross_modality(candidates: Sequence[CandidateEvent]) -> list[Candidate
     return [_fuse_group(group) for group in groups]
 
 
+def _replica_service_base(event: CandidateEvent) -> str | None:
+    """Return a service base only for a container-style final numeric suffix."""
+
+    component = event.component
+    if _features(event).get("component_level", 0.0) >= 0.5:
+        return None
+    if re.fullmatch(r"node-\d+", component):
+        return None
+    match = re.fullmatch(r"(.+)-(\d+)", component)
+    if match is None or not match.group(1):
+        return None
+    return match.group(1)
+
+
+def _can_coalesce_replicas(
+    group: Sequence[CandidateEvent], event: CandidateEvent
+) -> bool:
+    base = _replica_service_base(event)
+    if base is None or _replica_service_base(group[0]) != base:
+        return False
+    event_onset = _finite(event.onset_epoch_s, math.inf)
+    group_onset = min(_finite(member.onset_epoch_s, math.inf) for member in group)
+    if not math.isfinite(event_onset) or abs(event_onset - group_onset) > _FUSION_WINDOW_S:
+        return False
+    group_families = frozenset().union(*(_reason_families(member) for member in group))
+    return bool(group_families & _reason_families(event))
+
+
+def _coalesce_replica_group(
+    events: Sequence[CandidateEvent], service_base: str
+) -> CandidateEvent:
+    ordered = sorted(
+        events,
+        key=lambda event: (-_intrinsic_score(event), _canonical_key(event)),
+    )
+    onset = min(_finite(event.onset_epoch_s, math.inf) for event in ordered)
+    pods = tuple(sorted({event.component for event in ordered}))
+    reasons = _unique_in_order(
+        reason for event in ordered for reason in event.reason_candidates
+    )
+    fact_ids = _unique_in_order(
+        fact_id for event in ordered for fact_id in event.supporting_fact_ids
+    )
+    modalities = sorted(frozenset().union(*(_modalities(event) for event in ordered)))
+    feature = dict(_merge_features(ordered))
+    feature["replica_support"] = float(len(pods))
+    feature_scores = tuple(
+        (name, round(value, 6)) for name, value in sorted(feature.items())
+    )
+    score = max(_finite(event.score) for event in ordered) + 0.5 * (len(pods) - 1)
+    event_id = stable_event_id(
+        "rank",
+        "replicas",
+        service_base,
+        f"{onset:.6f}",
+        *pods,
+        *sorted(frozenset().union(*(_reason_families(event) for event in ordered))),
+        *(event.event_id for event in sorted(ordered, key=_canonical_key)),
+    )
+    return CandidateEvent(
+        component=service_base,
+        onset_epoch_s=onset,
+        score=round(score, 6),
+        reason_candidates=reasons,
+        supporting_fact_ids=fact_ids,
+        alternatives=pods,
+        modality="+".join(modalities),
+        event_id=event_id,
+        feature_scores=feature_scores,
+    )
+
+
+def _coalesce_sibling_replicas(
+    candidates: Sequence[CandidateEvent],
+) -> list[CandidateEvent]:
+    groups: list[list[CandidateEvent]] = []
+    passthrough: list[CandidateEvent] = []
+    for event in sorted(candidates, key=_canonical_key):
+        if _replica_service_base(event) is None:
+            passthrough.append(event)
+            continue
+        destination = next(
+            (group for group in groups if _can_coalesce_replicas(group, event)),
+            None,
+        )
+        if destination is None:
+            groups.append([event])
+        else:
+            destination.append(event)
+
+    coalesced = list(passthrough)
+    for group in groups:
+        pods = {event.component for event in group}
+        if len(pods) < 2:
+            coalesced.extend(group)
+            continue
+        service_base = _replica_service_base(group[0])
+        assert service_base is not None
+        coalesced.append(_coalesce_replica_group(group, service_base))
+    return coalesced
+
+
 def rank_events(
     candidates: Iterable[CandidateEvent],
     failure_count: int | None = None,
@@ -238,7 +341,7 @@ def rank_events(
     materialized = tuple(candidates)
     if any(not isinstance(event, CandidateEvent) for event in materialized):
         raise TypeError("candidates must contain CandidateEvent objects")
-    fused = _fuse_cross_modality(materialized)
+    fused = _coalesce_sibling_replicas(_fuse_cross_modality(materialized))
     if not fused:
         return ()
 

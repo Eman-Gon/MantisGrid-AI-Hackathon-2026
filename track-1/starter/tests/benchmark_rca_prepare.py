@@ -15,7 +15,11 @@ import pandas as pd
 STARTER = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(STARTER))
 
+from rca.contracts import format_utc8  # noqa: E402
+from rca.detect_metrics import detect_metrics  # noqa: E402
+from rca.detect_traces import detect_traces  # noqa: E402
 from rca.prepare import prepare_run  # noqa: E402
+from rca.rank import rank_events  # noqa: E402
 
 
 def _peak_rss_mib() -> float:
@@ -50,14 +54,37 @@ def main() -> None:
         chunk_rows=args.chunk_rows,
         include_trace=not args.no_trace,
     )
-    case_sizes = {
-        str(row_id): {
+    case_sizes = {}
+    analysis = {}
+    for row_id, case in prepared.cases.items():
+        metric_events, metric_facts = detect_metrics(case)
+        trace_events, trace_facts = detect_traces(case)
+        candidates = (*metric_events, *trace_events)
+        top = rank_events(candidates, max(3, case.spec.failure_count))
+        selected = rank_events(candidates, case.spec.failure_count)
+        case_sizes[str(row_id)] = {
             "metric_minutes": len(case.metric_minutes),
             "trace_minutes": len(case.trace_minutes),
             "trace_edges": len(case.trace_edges),
         }
-        for row_id, case in prepared.cases.items()
-    }
+        analysis[str(row_id)] = {
+            "failure_count": case.spec.failure_count,
+            "metric_candidates": len(metric_events),
+            "trace_candidates": len(trace_events),
+            "metric_facts": len(metric_facts),
+            "trace_facts": len(trace_facts),
+            "selected_event_ids": [event.event_id for event in selected],
+            "top": [
+                {
+                    "component": event.component,
+                    "onset": format_utc8(event.onset_epoch_s),
+                    "reasons": list(event.reason_candidates),
+                    "score": event.score,
+                    "modality": event.modality,
+                }
+                for event in top
+            ],
+        }
     print(
         json.dumps(
             {
@@ -70,6 +97,7 @@ def main() -> None:
                     prepared.duration_audit.raw_unit if prepared.duration_audit else None
                 ),
                 "case_sizes": case_sizes,
+                "analysis": analysis,
                 "warnings": prepared.warnings,
             },
             indent=2,
