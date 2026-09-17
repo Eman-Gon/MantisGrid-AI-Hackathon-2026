@@ -124,6 +124,16 @@ class LLM:
         if r.usage:
             u["prompt_tokens"] += r.usage.prompt_tokens or 0
             u["completion_tokens"] += r.usage.completion_tokens or 0
-        text = r.choices[0].message.content or ""
+        msg = r.choices[0].message
+        text = msg.content or ""
+        # With thinking disabled (chat_template_kwargs.enable_thinking=False)
+        # Featherless files the answer under the reasoning field -- named
+        # `reasoning_content` on some GLM models and `reasoning` on others --
+        # and leaves content empty. Only trust it on a clean finish: on a
+        # truncated call it holds half a chain of thought, not an answer.
+        if not text.strip() and r.choices[0].finish_reason == "stop":
+            extra = getattr(msg, "model_extra", None) or {}
+            text = (getattr(msg, "reasoning_content", None) or extra.get("reasoning_content")
+                    or getattr(msg, "reasoning", None) or extra.get("reasoning") or "")
         # GLM models can think out loud first; keep only the answer
         return re.sub(r"<think>.*?</think>", "", text, flags=re.S).strip()

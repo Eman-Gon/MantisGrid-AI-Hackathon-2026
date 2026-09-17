@@ -49,7 +49,7 @@ services:
   notebook:
     build:
       context: .
-      dockerfile: starter/Dockerfile
+      dockerfile: starter/Dockerfile.track2
     ports: ["8888:8888"]
     volumes: ["./starter:/work"]
     environment:

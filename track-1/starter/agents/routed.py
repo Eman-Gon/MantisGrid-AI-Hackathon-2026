@@ -1,144 +1,123 @@
-"""An example agent that routes across the GLM family.
+"""The default agent: prepare once -> detect -> rank -> one routed decision ->
+verify -> deterministic evidence.
 
-A starting point, not a good agent: it shows the plumbing -- calling Featherless,
-sending each call to the model it needs, counting tokens per model -- on top of
-the baseline's analysis. Every call has a job:
+    python run.py ... --agent agents.routed                      # routed
+    RCA_MODEL=zai-org/GLM-5.2 python run.py ... --agent agents.routed   # one model
 
-  1. no model     the baseline's analysis: the window, and components ranked by
-                  their strongest anomaly (agents/heuristic.py)
-  2. CHEAP        read the question: how many failures it says occurred, as a
-                  check on the parser -- a wrong count scores the whole case zero
-  3. STRONG       decide: pick the root cause from the ranked candidates, with a
-                  reason from the legal list
-  4. no model     check the pick names a candidate and a legal reason; otherwise
-                  keep the baseline's answer for that failure
-  5. CHEAP        write the evidence file from the decision and the data
+run.py calls `prepare()` once with every query, so each telemetry file is
+scanned once per run (rca/prepare.py).  `solve()` then works on that case's
+compact summaries.  If preparation failed, or a case was not prepared, solve()
+prepares that one case on its own; if that fails too, the no-model baseline in
+agents/heuristic.py answers, so there is always a prediction.
 
-    python run.py ... --agent agents.routed
-    RCA_MODEL=zai-org/GLM-5.2 python run.py ... --agent agents.routed
-
-The second line runs every call on one model -- the single-model configuration
-to compare your routing against. `python cost.py <out>/usage.jsonl` prices both.
+Model calls happen only in rca/route.py.  Evidence is rendered from verified
+facts in rca/evidence.py -- no model writes a number.
 """
 from __future__ import annotations
 
-import json
-import os
-import re
 import sys
+import time
+import traceback
 from pathlib import Path
 
+import pandas as pd
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from llm import LLM                                        # noqa: E402
-from run import Solution, format_prediction               # noqa: E402
-from agents.heuristic import (NODE_REASONS, POD_REASONS,  # noqa: E402
-                              Analysis, analyse, answer_for, solve as baseline)
+from llm import LLM                                          # noqa: E402
+from run import Solution, format_prediction                  # noqa: E402
+from rca import evidence, route                              # noqa: E402
+from rca.contracts import CaseSpec, format_utc8, parse_case  # noqa: E402
+from rca.detect_metrics import detect_metrics                # noqa: E402
+from rca.detect_traces import detect_traces                  # noqa: E402
+from rca.prepare import prepare_run                          # noqa: E402
+from rca.rank import rank_events                             # noqa: E402
 
-# Preference order per tier, not one model. A busy provider is a normal event and
-# llm.ask() walks down the list -- see "When a model is unavailable" in
-# docs/models.md. Picking the second name is a real decision: it should be close in
-# capability to the first, or the fallback quietly changes what your agent is.
-CHEAP = ["zai-org/GLM-4.7-Flash", "zai-org/GLM-5.3-Flash"]
-STRONG = ["zai-org/GLM-5.2", "zai-org/GLM-5.1"]
-CANDIDATES = 10          # components shown to the strong model
-KPIS_EACH = 3            # strongest KPIs shown per component
+RANKED = 8          # candidates kept after ranking (the model sees these)
+_PREP_KEY = "rca_prepared"
 
 
-def _model(tier: list[str]) -> list[str]:
-    """RCA_MODEL pins one model for an ablation; otherwise the tier's own order."""
-    return [os.environ["RCA_MODEL"]] if os.environ.get("RCA_MODEL") else tier
+def prepare(dataset: Path, queries: pd.DataFrame, ctx: dict) -> None:
+    """Called once by run.py before the case loop."""
+    run = prepare_run(dataset, queries, ctx["out_dir"])
+    ctx[_PREP_KEY] = run
+    print(f"prepared {len(run.cases)} case(s): {run.preparation_wall_s:.0f}s, "
+          f"{len(run.telemetry_components)} components, "
+          f"{sum(run.scan_counts.values())} file scan(s)")
+    for w in run.warnings:
+        print(f"  prepare warning: {w}")
 
 
-def _json(text: str) -> dict:
-    """The first {...} in a reply; models like to wrap JSON in prose or fences."""
-    m = re.search(r"\{.*\}", text, re.S)
-    return json.loads(m.group(0)) if m else {}
+def _spec_for(instruction: str, ctx: dict) -> CaseSpec:
+    q = ctx.get("queries")
+    if q is not None:
+        hit = q[q.instruction == instruction]
+        if len(hit):
+            r = hit.iloc[0]
+            return parse_case(int(r.row_id), r.task_index, instruction)
+    # no frame (a direct call): infer the task type from what the prose asks for
+    t = instruction.lower()
+    asks = ("datetime" if "datetime" in t or "occurrence time" in t else "",
+            "component" if "component" in t else "",
+            "reason" if "reason" in t else "")
+    task = {("datetime", "", ""): "task_1", ("", "", "reason"): "task_2",
+            ("", "component", ""): "task_3", ("datetime", "", "reason"): "task_4",
+            ("datetime", "component", ""): "task_5", ("", "component", "reason"): "task_6"
+            }.get(asks, "task_7")
+    return parse_case(-1, task, instruction)
 
 
-def _candidates(a: Analysis) -> str:
-    lines = []
-    for comp, z in a.ranked.head(CANDIDATES).items():
-        kpis = a.j[a.j.component == comp].head(KPIS_EACH)
-        shown = ", ".join(f"{k.kpi_name} z={k.z:.1f}" for k in kpis.itertuples())
-        lines.append(f"- {comp} (peak z {z:.1f}): {shown}")
-    return "\n".join(lines)
+def _prepared_case(spec: CaseSpec, dataset: Path, ctx: dict):
+    run = ctx.get(_PREP_KEY)
+    if run is not None and spec.row_id in run.cases:
+        return run, run.cases[spec.row_id]
+    # not prepared (prepare() failed or a direct call): prepare this one case
+    run = prepare_run(dataset, (spec,), ctx.get("out_dir", Path(".")))
+    return run, run.cases[spec.row_id]
 
 
 def solve(instruction: str, dataset_dir: Path, ctx: dict) -> Solution:
-    a = analyse(instruction, dataset_dir)
-    if not isinstance(a, Analysis):
-        return a                               # nothing to rank; the baseline explains why
-    llm = LLM()
-    fallback = [answer_for(a, c) for c in a.ranked.head(a.n).index]
-    notes = []
-
+    t0 = time.time()
     try:
-        # 2. CHEAP: read the question
-        q = _json(llm.ask(_model(CHEAP),
-            "Read this root-cause-analysis question. Reply with JSON only: "
-            '{"failures": <number of failures it says occurred>}\n\n' + instruction))
-        if q.get("failures") != a.n:
-            notes.append(f"The question-reading call said {q.get('failures')} failure(s); "
-                         f"the parser said {a.n}. Kept the parser's count.")
-
-        # 3. STRONG: decide
-        legal = sorted(set(NODE_REASONS.values()) | set(POD_REASONS.values()))
-        d = _json(llm.ask(_model(STRONG),
-            f"A microservice system had {a.n} failure(s) between {a.lo:%Y-%m-%d %H:%M} "
-            f"and {a.hi:%H:%M} UTC. These components had the strongest anomalies in that "
-            f"window, as robust z-scores against the rest of the day:\n\n{_candidates(a)}\n\n"
-            "Anomalies spread: the loudest component is often a victim, not the cause. "
-            f"Pick the {a.n} root-cause component(s), each with one reason from this list "
-            f"(node-* components take node reasons):\n{json.dumps(legal)}\n\n"
-            'Reply with JSON only: {"answers": [{"component": ..., "reason": ...}], '
-            '"confidence": "low" | "medium" | "high", "why": "two or three sentences"}'))
-    except Exception as e:                     # an API error must not cost the answer
-        notes.append(f"A model call failed ({type(e).__name__}: {e}); "
-                     "this is the baseline's answer.")
+        spec = _spec_for(instruction, ctx)
+    except Exception:
+        from agents.heuristic import solve as baseline
         sol = baseline(instruction, dataset_dir, ctx)
-        sol.evidence += "\n" + "\n".join(notes) + "\n"
-        sol.usage = llm.usage
+        sol.evidence = "Could not parse the case; this is the baseline's answer.\n\n" + sol.evidence
         return sol
 
-    # 4. check the decision against the data
-    answers = []
-    picks = d.get("answers") or []
-    for i in range(a.n):
-        p = picks[i] if i < len(picks) and isinstance(picks[i], dict) else {}
-        comp, reason = p.get("component"), p.get("reason")
-        if comp not in a.ranked.index:
-            if comp:
-                notes.append(f"The model named {comp!r}, which is not a candidate; "
-                             "kept the baseline's pick.")
-            answers.append(fallback[i])
-            continue
-        x = answer_for(a, comp)                # time: that component's peak
-        table = NODE_REASONS if comp.startswith("node-") else POD_REASONS
-        if reason in table.values():
-            x["reason"] = reason
-        elif reason:
-            notes.append(f"{reason!r} is not a legal reason for {comp}; kept {x['reason']!r}.")
-        answers.append(x)
-
-    # 5. CHEAP: write the evidence
-    decided = "\n".join(f"{i}. {x['component']} / {x['reason']} / {x['datetime']}"
-                        for i, x in enumerate(answers, 1))
-    facts = (f"Answer:\n{decided}\n\nConfidence: {d.get('confidence', 'low')}\n"
-             f"Reasoning: {d.get('why', '')}\n\nCandidates (z-scores):\n{_candidates(a)}")
+    notes: list[str] = []
     try:
-        evidence = llm.ask(_model(CHEAP),
-            "Write a short markdown evidence note for this diagnosis, with exactly these "
-            "sections: ## Answer, ## Confidence, ## Evidence, ## Ruled out. Use only the "
-            "facts below; do not invent numbers.\n\n" + facts)
-    except Exception as e:
-        notes.append(f"The evidence-writing call failed ({type(e).__name__}); "
-                     "these are the raw facts.")
-        evidence = "## Facts\n\n" + facts
+        run, pc = _prepared_case(spec, Path(dataset_dir), ctx)
+        mc, mf = detect_metrics(pc)
+        tc, tf = detect_traces(pc)
+        facts = {f.fact_id: f for f in (*mf, *tf)}
+        ranked = rank_events((*mc, *tc), failure_count=max(RANKED, spec.failure_count))
+        notes.append(f"detectors: {len(mc)} metric + {len(tc)} trace candidate(s), "
+                     f"{len(facts)} fact(s); {len(ranked)} ranked")
+        notes += [f"prepare: {w}" for w in pc.warnings]
+        # rank.py coalesces replicas into a service-level candidate (component
+        # without a replica suffix); those names are legal answers too
+        components = frozenset(run.telemetry_components) | {c.component for c in ranked}
+    except Exception:
+        from agents.heuristic import solve as baseline
+        sol = baseline(instruction, dataset_dir, ctx)
+        sol.evidence = ("The RCA pipeline raised; this is the baseline's answer.\n\n```\n"
+                        + traceback.format_exc() + "```\n\n" + sol.evidence)
+        return sol
 
-    evidence += "\n\n## How this was produced\n\n" + "\n".join(
-        f"- `{m}`: {u['calls']} call(s), {u['prompt_tokens']:,} in / "
-        f"{u['completion_tokens']:,} out" for m, u in llm.usage.items())
-    if notes:
-        evidence += "\n\n" + "\n".join(f"- {n}" for n in notes)
-    return Solution(prediction=format_prediction(answers), evidence=evidence + "\n",
-                    usage=llm.usage)
+    try:
+        llm = LLM()
+    except Exception as e:
+        llm = None
+        notes.append(f"no model reachable ({type(e).__name__}: {e})")
+
+    hyps, w, reasoning = route.decide(spec, ranked, facts, llm, components)
+    notes += list(w)
+    usage = llm.usage if llm else {}
+
+    answers = [{"datetime": format_utc8(h.onset_epoch_s), "component": h.component,
+                "reason": h.reason_enum} for h in hyps]
+    notes.append(f"solve wall: {time.time() - t0:.1f}s")
+    md = evidence.render(spec, hyps, ranked, facts, reasoning=reasoning,
+                         warnings=notes, usage=usage)
+    return Solution(prediction=format_prediction(answers), evidence=md, usage=usage)

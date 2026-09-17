@@ -1,30 +1,72 @@
-# MantisGrid Hackathon 2026
+# MantisGrid Hackathon 2026 — Track 1: Root cause analysis
 
-Two tracks. Pick one.
+An agent that reads production telemetry from a microservice system and, for each
+30-minute incident window, names when the failure started, which component caused
+it and why — routing every model call across the GLM family on Featherless to the
+cheapest model that can do that call's job.
 
-| Track | The question | You build |
-|---|---|---|
-| [**Track 1 — Root cause analysis**](track-1/) | *Why did this break?* | an agent that finds the cause of an incident |
-| [**Track 2 — Cluster efficiency**](track-2/) | *Why is this wasteful?* | the view that says where to cut GPU spend |
+The original event brief is in [`HACKATHON_BRIEF.md`](HACKATHON_BRIEF.md); the Track 1
+docs are under [`track-1/docs/`](track-1/docs/).
 
-Each track's `README.md` is its brief. Start there.
+## Run it the way the judges do
 
-## Handing it in
+```bash
+docker build -t mantis-rca .
+docker run --rm \
+  -e FEATHERLESS_API_KEY \
+  -v /path/to/Market-cloudbed-1:/data:ro \
+  -v /path/to/empty/out:/out \
+  mantis-rca \
+  python run.py --dataset /data --queries /data/query.csv --out /out
+```
 
-**One form, before September 17, 2026, 3:00pm PDT.** Late submissions are not judged.
+Writes `predictions.csv`, `evidence/<row_id>.md` per case and `usage.jsonl` into `/out`.
+The key is read from `FEATHERLESS_API_KEY` and the endpoint from `FEATHERLESS_BASE_URL`
+(default `https://api.featherless.ai/v1`). Nothing is hard-coded and nothing else is
+reached.
 
-**https://forms.gle/UbPSwZhKNfkovM8s5**
+## Run it locally
 
-It asks for your team, your project title and track, a public repository with the
-commit you want judged, and a presentation of around four minutes showing the
-project working. Your track's `docs/submission.md` has the rest, including what the
-repository has to contain.
+```bash
+cd track-1/starter && pip install -r requirements.txt && cd ..
+export FEATHERLESS_API_KEY=fw-...
+make validate                 # default agent on a one- and a two-failure case; checks shape
+make dev N=5 && make score    # first 5 dev cases, scored with the benchmark's evaluator
+make cost                     # dollars per case and per model
+```
 
-## Before you start
+## Layout
 
-- [`PARTICIPANT_AGREEMENT.md`](PARTICIPANT_AGREEMENT.md) — the terms you agree to.
-- [`ATTRIBUTION.md`](ATTRIBUTION.md) — where the data comes from, and its licences.
+```
+Dockerfile              the only Dockerfile; builds track-1/starter into /app
+track-1/starter/
+  run.py                the judged entry point (CLI unchanged from the starter)
+  llm.py                Featherless client: retries, fallback, circuit breaker, token counts
+  agents/routed.py      the default agent
+  agents/heuristic.py   no-model baseline and the always-guess fallback
+  rca/                  the pipeline: prepare -> detect -> rank -> route -> verify -> evidence
+eval/                   harness, frozen case set, results   (see REPORT.md)
+REPORT.md               eval, routed-vs-single-model comparison, failure taxonomy
+AGENTS.md               invariants and file ownership for anyone editing this repo
+```
 
-## The data is not in this repository
+## Eval
 
-Each track's README tells you how to get the data.
+```bash
+python3 eval/run_eval.py --config routed        # agent picks the model per call
+python3 eval/run_eval.py --config single-strong # every call on GLM-5.2
+python3 eval/run_eval.py --config single-flash  # every call on GLM-4.7-Flash
+python3 eval/summarize.py                       # -> eval/results/summary.md
+```
+
+Every config runs the same frozen case ids (`eval/cases.json`) through the real
+`run.py`. Results and discussion are in [`REPORT.md`](REPORT.md).
+
+## AI disclosure
+
+Models, assistants and frameworks used, and what was AI-generated versus written by
+the team, are listed in [`REPORT.md`](REPORT.md#ai-disclosure).
+
+## Team
+
+<!-- TODO: names -->
