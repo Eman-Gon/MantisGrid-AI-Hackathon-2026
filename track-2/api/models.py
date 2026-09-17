@@ -1,6 +1,6 @@
 """Response models.
 
-Layer A follows MantisGrid's production API contract, except where
+Layer A follows MantisGrid's production API, except where
 api/README.md lists a deviation (RuleTemplate fields, edge types, how causal
 answers are computed).
 Layer B is the proposed business layer and does not exist in the product.
@@ -176,7 +176,7 @@ class Provenance(pydantic.BaseModel):
 class Envelope(pydantic.BaseModel):
     """Every Layer B response carries this.
 
-    `kind` is the contract with the reader:
+    `kind` tells the reader what they are getting:
       fact       deterministic, recomputable from the raw data
       judgment   a model said so; `confidence` is populated
       simulated  synthetic, no real signal underneath

@@ -14,7 +14,7 @@ docker compose up                      # -> http://localhost:8000/docs
 ## Layers
 
 **Layer A** (`/v1/detect`, `/v1/events/findings`, `/v1/neighbor`, `/v1/causal`,
-`/v1/policies/rules`) follows MantisGrid's production contract
+`/v1/policies/rules`) matches MantisGrid's production API
 (`mantisgrid/oracle/api_types.py`), with these known deviations — checked against
 the product on 2026-09-10:
 

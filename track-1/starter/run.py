@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The submission contract. We run exactly this.
+"""The submission requirements. We run exactly this.
 
     python run.py --dataset <dir> --queries <query.csv> --out <dir>
 

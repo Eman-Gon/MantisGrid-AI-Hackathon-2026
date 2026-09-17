@@ -16,7 +16,7 @@ data loads once, on the first tool call (a few seconds), and stays in memory.
 ## The server
 
 [`server.py`](server.py) exposes **curated, hand-written tools** with LLM-facing
-docstrings that teach the `fact` / `judgment` / `simulated` contract and when to
+docstrings that teach the `fact` / `judgment` / `simulated` distinction and when to
 validate a judgment against `causal`. An agent reasons better with these
 descriptions than with raw endpoint docs.
 
@@ -88,7 +88,7 @@ first launch.
 
 ## Tools (curated server)
 
-**Layer A — production contract (facts you can trust):**
+**Layer A — the real API (facts you can trust):**
 
 - `health` — store status; call first if other tools error.
 - `list_findings` — raw detector findings; filter by detector/category/severity/resource.
@@ -110,7 +110,7 @@ first launch.
 Monetizing tools accept `usd_per_gpu_hour` / `usd_per_engineer_hour` to model
 different pricing; responses are then tagged `2026-Q3+custom`.
 
-## The contract the agent should follow
+## How the agent should read `kind`
 
 Every Layer B response carries a `kind`:
 

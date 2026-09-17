@@ -42,7 +42,7 @@ class MGAI:
     def health(self):
         return self._get("/health")
 
-    # ---- Layer A: MantisGrid's production contract ----
+    # ---- Layer A: MantisGrid's real API ----
     def findings(self, *, detector_id=None, category=None, severity=None,
                  resource_id=None, limit=100, offset=0) -> list[dict]:
         body = {"detector_id": detector_id, "category": category,

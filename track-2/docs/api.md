@@ -6,15 +6,15 @@ page is a guide to what matters.
 
 ## Two layers
 
-**Layer A is MantisGrid's production contract** — the same paths and response models
-as the real product. What you learn here is real.
+**Layer A is MantisGrid's real API** — the same paths and response models as the
+product. What you learn here is real.
 
 **Layer B is proposed.** It doesn't exist in the product yet. It's our guess at what a
 business layer should look like, and finding out where that guess is wrong is part of
 the point. Push back on it.
 
 ```
-Layer A — production contract
+Layer A — the real API
   POST /v1/events/findings              list findings
   POST /v1/causal                       root-cause analysis for one finding
   POST /v1/neighbor                     the resource graph, N hops out

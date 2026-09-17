@@ -24,7 +24,7 @@ window        the period the condition is evaluated over
 impact_kind   lost | consumed | degraded | unused_capacity | (none)
 ```
 
-`impact_kind` is a contract about the GPU-hours in `metadata.impact_gpu_hours`:
+`impact_kind` tells you what the GPU-hours in `metadata.impact_gpu_hours` represent:
 
 | kind | means |
 |---|---|

@@ -5,7 +5,7 @@ descriptions carry more than the shape of each response — they carry the
 *epistemics* an agent needs to answer *"where should we cut GPU spend?"*:
 
 * Layer A (``findings``, ``causal``, ``neighbor``, ``rules``) mirrors the
-  production contract. ``causal`` is trustworthy; it resolves a correlated
+  production API. ``causal`` is trustworthy; it resolves a correlated
   cluster of findings to the one resource underneath.
 * Layer B (``efficiency_summary``, ``waste_breakdown``, ``queue_latency``,
   ``scaling_efficiency``, ``underperforming``, ``recommendations``) is a proposed
@@ -44,7 +44,7 @@ mcp = FastMCP(
         "task: find where GPU spend is wasted.\n\n"
         "Two layers:\n"
         "- Layer A (findings, causal, neighbor, rules) mirrors the production "
-        "contract. `causal` is authoritative — it resolves correlated findings to "
+        "API. `causal` is authoritative — it resolves correlated findings to "
         "one root cause.\n"
         "- Layer B (efficiency_summary, waste_breakdown, queue_latency, "
         "scaling_efficiency, underperforming, recommendations) is a proposed "
@@ -85,7 +85,7 @@ def health() -> dict:
     return api.health()
 
 
-# ============================================================ Layer A — production contract
+# ============================================================ Layer A — the real API
 @mcp.tool
 def list_findings(
     detector_id: str | None = None,

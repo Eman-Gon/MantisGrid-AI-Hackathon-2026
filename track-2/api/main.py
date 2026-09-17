@@ -1,6 +1,6 @@
 """MGAI facsimile API.
 
-Layer A mirrors MantisGrid's production contract (oracle/routers).
+Layer A mirrors MantisGrid's production API (oracle/routers).
 Layer B is the proposed business layer -- it does not exist in the product.
 
 The OpenAPI page at /docs is the challenge spec.
@@ -31,7 +31,7 @@ app = FastAPI(
     title="MGAI API (hackathon facsimile)",
     version="1.0.0",
     description=(
-        "**Layer A** mirrors MantisGrid's production contract — same paths and "
+        "**Layer A** mirrors MantisGrid's production API — same paths and "
         "response models as the real product.\n\n"
         "**Layer B** is a proposed business layer that does **not** exist in the "
         "product yet. Every Layer B response carries `kind`: `fact` (deterministic, "
@@ -97,13 +97,13 @@ def health():
 
 # ============================================================ Layer A
 @app.post("/v1/detect/{integration_id}", response_model=m.DetectResponse,
-          tags=["Layer A — production contract"])
+          tags=["Layer A — the real API"])
 def detect(integration_id: str):
     return m.DetectResponse(results=dict(Counter(f["detectorId"] for f in store().findings)))
 
 
 @app.post("/v1/events/findings", response_model=m.FindingsResponse,
-          tags=["Layer A — production contract"])
+          tags=["Layer A — the real API"])
 def findings(req: m.FindingsRequest):
     out = store().findings
     if req.detector_id:
@@ -120,7 +120,7 @@ def findings(req: m.FindingsRequest):
 
 
 @app.post("/v1/neighbor", response_model=m.NeighborResponse,
-          tags=["Layer A — production contract"])
+          tags=["Layer A — the real API"])
 def neighbor(req: m.NeighborRequest):
     s = store()
     adj: dict[str, set[str]] = {}
@@ -154,7 +154,7 @@ def neighbor(req: m.NeighborRequest):
 
 
 @app.post("/v1/causal", response_model=m.CausalResponse,
-          tags=["Layer A — production contract"])
+          tags=["Layer A — the real API"])
 def causal(req: m.CausalRequest):
     """Root-cause analysis. This endpoint is correct -- it resolves a correlated
     cluster of findings to the single resource underneath."""
@@ -365,7 +365,7 @@ def _causal_volume(s, f, root: str, root_name: str) -> m.CausalResponse:
                              metric_name="gpu_sm_utilization",
                              pattern="abrupt_drop", change_pct=-91.4, z_score=-7.8)],
         # NEUTRALISED FOR IP. The real algorithm names are MantisGrid's and
-        # Layer A is the production contract, so naming them here discloses them.
+        # Layer A mirrors the real API, so naming them here discloses them.
         # Kai/Randolph to confirm this is far enough -- the *field* still says we
         # ensemble multiple causal methods and score their agreement.
         confidence=0.74, algorithm_agreement={"method_a": 3, "method_b": 2},
@@ -373,7 +373,7 @@ def _causal_volume(s, f, root: str, root_name: str) -> m.CausalResponse:
 
 
 @app.get("/v1/policies/rules", response_model=m.RuleTemplatesResponse,
-         tags=["Layer A — production contract"])
+         tags=["Layer A — the real API"])
 def rules():
     """Every rule in the catalogue, including the ones that found nothing.
 

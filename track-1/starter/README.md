@@ -1,10 +1,11 @@
 # Track 1 starter
 
-The contract, a baseline that runs for free, an example that calls the models, and
-a scorer. Read `run.py` — it's short, and it's exactly what we execute.
+The submission requirements, a baseline that runs for free, an example that calls
+the models, and a scorer. Read `run.py` — it's short, and it's exactly what we
+execute.
 
 ```
-run.py          the submission contract. Replace the agent, not this file
+run.py          the submission requirements. Replace the agent, not this file
 score.py        score yourself against the dev split
 llm.py          a Featherless client that counts tokens per model
 cost.py         turns those token counts into dollars
