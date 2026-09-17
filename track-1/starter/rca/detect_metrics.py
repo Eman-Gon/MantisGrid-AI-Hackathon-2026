@@ -14,7 +14,7 @@ Two design choices are load-bearing:
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from functools import lru_cache
 import math
 import re
@@ -72,6 +72,10 @@ _ISOLATED_EVENT_SCORE = 6.0
 _ADJACENT_MINUTE_S = 90.0
 _CLUSTER_ONSET_S = 90.0
 _MAX_STANDARD_SCORE = 25.0
+_IO_CONTEXT_WINDOW_S = 120.0
+_IO_PERSISTENCE_RATIO = 0.20
+_IO_RELATED_LEVEL_SCORE = 1.50
+_UNCONFIRMED_IO_IMPULSE_CAP = 6.0
 
 _REASON_ORDER = {reason: index for index, reason in enumerate(LEGAL_REASONS)}
 
@@ -104,8 +108,14 @@ class _Episode:
     onset_epoch_s: float
     end_epoch_s: float
     score: float
+    raw_score: float
     minute_count: int
     fact: EvidenceFact
+    context_facts: tuple[EvidenceFact, ...] = ()
+    post_onset_persistence: float = 0.0
+    related_signal_support: float = 0.0
+    isolated_impulse: bool = False
+    effective_minute_count: int = 1
 
 
 def _normalise_signal(signal: str) -> str:
@@ -136,6 +146,28 @@ def _is_counter_signal(name: str) -> bool:
         "_retransmit",
         "_retrans_",
     )
+
+
+def _direct_node_io_direction(signal: str) -> str | None:
+    """Return the direction for a direct throughput signal, not an await gauge."""
+
+    name = _normalise_signal(signal)
+    if "await" in name:
+        return None
+    if _has(name, "system_io_r_s", "system_io_rkb_s", "disk_read"):
+        return "read"
+    if _has(name, "system_io_w_s", "system_io_wkb_s", "disk_write"):
+        return "write"
+    return None
+
+
+def _node_io_await_direction(signal: str) -> str | None:
+    name = _normalise_signal(signal)
+    if "system_io_r_await" in name or ("disk_read" in name and "await" in name):
+        return "read"
+    if "system_io_w_await" in name or ("disk_write" in name and "await" in name):
+        return "write"
+    return None
 
 
 @lru_cache(maxsize=1024)
@@ -271,7 +303,8 @@ def _profiles_for(source_kind: str, signal: str) -> tuple[_Profile, ...]:
                 return ()
             return (_Profile("node disk space consumption", direction=direction),)
 
-        if _has(name, "system_io_r_s", "system_io_rkb_s", "disk_read"):
+        io_direction = _direct_node_io_direction(name)
+        if io_direction == "read":
             # Direct throughput rates can represent a real one-minute burst.
             # Accept a strong level/delta event without weakening thresholds
             # for every gauge in the table.
@@ -282,7 +315,7 @@ def _profiles_for(source_kind: str, signal: str) -> tuple[_Profile, ...]:
                     allow_isolated=True,
                 ),
             )
-        if _has(name, "system_io_w_s", "system_io_wkb_s", "disk_write"):
+        if io_direction == "write":
             return (
                 _Profile(
                     "node disk write I/O consumption",
@@ -290,9 +323,10 @@ def _profiles_for(source_kind: str, signal: str) -> tuple[_Profile, ...]:
                     allow_isolated=True,
                 ),
             )
-        if "system_io_r_await" in name:
+        await_direction = _node_io_await_direction(name)
+        if await_direction == "read":
             return (_Profile("node disk read I/O consumption"),)
-        if "system_io_w_await" in name:
+        if await_direction == "write":
             return (_Profile("node disk write I/O consumption"),)
 
     # Service aggregates can corroborate another detector, but they are not
@@ -508,11 +542,211 @@ def _episodes_for_series(
                     onset_epoch_s=fact.onset_epoch_s,
                     end_epoch_s=float(run[-1][0]["minute_epoch_s"]),
                     score=max(item[1].score for item in run),
+                    raw_score=max(item[1].score for item in run),
                     minute_count=len(run),
                     fact=fact,
+                    effective_minute_count=len(run),
                 )
             )
     return tuple(episodes)
+
+
+def _context_fact(
+    *,
+    row_id: int | str,
+    source_file: str,
+    component: str,
+    signal: str,
+    row: Mapping[str, Any],
+    context_kind: str,
+    method: str,
+) -> EvidenceFact:
+    minute = float(row["minute_epoch_s"])
+    minute_token = int(minute) if minute.is_integer() else minute
+    return EvidenceFact(
+        fact_id=stable_fact_id(
+            row_id,
+            "metric-context",
+            context_kind,
+            source_file,
+            component,
+            signal,
+            minute_token,
+        ),
+        source_file=source_file,
+        locator=(
+            f"minute_epoch_s={minute_token}; component={component}; signal={signal}"
+        ),
+        component=component,
+        signal=signal,
+        onset_epoch_s=minute,
+        observed=_float(row["mean"]) or 0.0,
+        baseline=_float(row["baseline_mean"]) or 0.0,
+        method=method,
+    )
+
+
+def _enrich_direct_io_episodes(
+    *,
+    row_id: int | str,
+    episodes: Iterable[_Episode],
+    series_records: Mapping[
+        tuple[str, str, str, str], list[Mapping[str, Any]]
+    ],
+) -> tuple[_Episode, ...]:
+    """Distinguish persistent node I/O pressure from an isolated normal impulse.
+
+    A direct throughput spike remains a candidate even without context.  Its
+    effective magnitude merely saturates, because a very large single sample is
+    not proportionally stronger causal evidence.  Immediate level persistence
+    or a post-onset same-direction await signal removes that saturation and is
+    retained as independently verifiable evidence.
+    """
+
+    by_component: dict[
+        tuple[str, str, str], list[tuple[str, list[Mapping[str, Any]]]]
+    ] = {}
+    for (source_file, source_kind, component, signal), records in series_records.items():
+        by_component.setdefault((source_file, source_kind, component), []).append(
+            (signal, records)
+        )
+    for values in by_component.values():
+        values.sort(key=lambda item: item[0])
+
+    enriched: list[_Episode] = []
+    for episode in episodes:
+        direction = (
+            _direct_node_io_direction(episode.signal)
+            if episode.source_kind == "node" and episode.minute_count == 1
+            else None
+        )
+        if direction is None:
+            enriched.append(episode)
+            continue
+
+        series_key = (
+            episode.source_file,
+            episode.source_kind,
+            episode.component,
+            episode.signal,
+        )
+        own_records = series_records.get(series_key, [])
+        onset_row = next(
+            (
+                row
+                for row in own_records
+                if abs(float(row["minute_epoch_s"]) - episode.onset_epoch_s) < 1e-6
+            ),
+            None,
+        )
+        next_row = next(
+            (
+                row
+                for row in own_records
+                if 0.0
+                < float(row["minute_epoch_s"]) - episode.onset_epoch_s
+                <= _ADJACENT_MINUTE_S
+            ),
+            None,
+        )
+
+        persistence = 0.0
+        context_facts: list[EvidenceFact] = []
+        if onset_row is not None and next_row is not None:
+            onset_mean = _float(onset_row["mean"])
+            onset_base = _float(onset_row["baseline_mean"])
+            next_mean = _float(next_row["mean"])
+            next_base = _float(next_row["baseline_mean"])
+            if None not in (onset_mean, onset_base, next_mean, next_base):
+                onset_excess = max(0.0, float(onset_mean) - float(onset_base))
+                next_excess = max(0.0, float(next_mean) - float(next_base))
+                if onset_excess > 0.0:
+                    persistence = min(1.0, next_excess / onset_excess)
+            if persistence >= _IO_PERSISTENCE_RATIO:
+                context_facts.append(
+                    _context_fact(
+                        row_id=row_id,
+                        source_file=episode.source_file,
+                        component=episode.component,
+                        signal=episode.signal,
+                        row=next_row,
+                        context_kind="post-onset-persistence",
+                        method=(
+                            "post-onset persistence check; the next-minute mean "
+                            "retained at least 20% of the onset excess above baseline"
+                        ),
+                    )
+                )
+
+        related_support = 0.0
+        related_row: Mapping[str, Any] | None = None
+        related_signal = ""
+        component_key = (
+            episode.source_file,
+            episode.source_kind,
+            episode.component,
+        )
+        for signal, records in by_component.get(component_key, []):
+            if _node_io_await_direction(signal) != direction:
+                continue
+            for row in records:
+                offset = float(row["minute_epoch_s"]) - episode.onset_epoch_s
+                if not 0.0 <= offset <= _IO_CONTEXT_WINDOW_S:
+                    continue
+                score = max(
+                    0.0,
+                    _standard_score(
+                        row["mean"], row["baseline_mean"], row["baseline_std"]
+                    ),
+                )
+                if (
+                    score > related_support
+                    or (
+                        score == related_support
+                        and related_row is not None
+                        and float(row["minute_epoch_s"])
+                        < float(related_row["minute_epoch_s"])
+                    )
+                ):
+                    related_support = score
+                    related_row = row
+                    related_signal = signal
+        if related_row is not None and related_support >= _IO_RELATED_LEVEL_SCORE:
+            context_facts.append(
+                _context_fact(
+                    row_id=row_id,
+                    source_file=episode.source_file,
+                    component=episode.component,
+                    signal=related_signal,
+                    row=related_row,
+                    context_kind="post-onset-directional-await",
+                    method=(
+                        "post-onset directional corroboration; the related await "
+                        "mean was at least 1.5 baseline standard deviations high"
+                    ),
+                )
+            )
+
+        has_persistence = persistence >= _IO_PERSISTENCE_RATIO
+        has_related_signal = related_support >= _IO_RELATED_LEVEL_SCORE
+        corroborated = has_persistence or has_related_signal
+        adjusted_score = (
+            episode.score
+            if corroborated
+            else min(episode.score, _UNCONFIRMED_IO_IMPULSE_CAP)
+        )
+        enriched.append(
+            replace(
+                episode,
+                score=adjusted_score,
+                context_facts=tuple(context_facts),
+                post_onset_persistence=persistence,
+                related_signal_support=related_support,
+                isolated_impulse=not corroborated,
+                effective_minute_count=2 if has_persistence else 1,
+            )
+        )
+    return tuple(enriched)
 
 
 def _cluster_episodes(episodes: Iterable[_Episode]) -> tuple[tuple[_Episode, ...], ...]:
@@ -564,9 +798,15 @@ def _candidate_for_cluster(
             ),
         )
     )
-    unique_signals = {episode.signal for episode in cluster}
-    unique_sources = {episode.source_file for episode in cluster}
+    cluster_facts = tuple(
+        fact
+        for episode in cluster
+        for fact in (episode.fact, *episode.context_facts)
+    )
+    unique_signals = {fact.signal for fact in cluster_facts}
+    unique_sources = {fact.source_file for fact in cluster_facts}
     magnitude = max(episode.score for episode in cluster)
+    raw_magnitude = max(episode.raw_score for episode in cluster)
     score = min(
         _MAX_STANDARD_SCORE + 2.0,
         magnitude
@@ -574,16 +814,28 @@ def _candidate_for_cluster(
         + 0.15 * max(0, len(unique_sources) - 1),
     )
 
+    ordered_episodes = sorted(
+        cluster,
+        key=lambda episode: (
+            -episode.score,
+            episode.signal,
+            episode.reason,
+            episode.fact.fact_id,
+        ),
+    )
     fact_ids = tuple(
         dict.fromkeys(
-            episode.fact.fact_id
-            for episode in sorted(
-                cluster,
-                key=lambda episode: (
-                    -episode.score,
-                    episode.signal,
-                    episode.reason,
-                    episode.fact.fact_id,
+            fact.fact_id
+            for episode in ordered_episodes
+            for fact in (
+                episode.fact,
+                *sorted(
+                    episode.context_facts,
+                    key=lambda fact: (
+                        fact.onset_epoch_s,
+                        fact.signal,
+                        fact.fact_id,
+                    ),
                 ),
             )
         )
@@ -602,11 +854,27 @@ def _candidate_for_cluster(
         event_id=event_id,
         feature_scores=(
             ("magnitude", round(magnitude, 6)),
+            ("raw_magnitude", round(raw_magnitude, 6)),
             ("cross_signal", float(len(unique_signals))),
             ("episode_count", float(len(cluster))),
             (
                 "sustained_minutes",
-                float(max(episode.minute_count for episode in cluster)),
+                float(max(episode.effective_minute_count for episode in cluster)),
+            ),
+            (
+                "post_onset_persistence",
+                round(
+                    max(episode.post_onset_persistence for episode in cluster),
+                    6,
+                ),
+            ),
+            (
+                "related_signal_support",
+                round(max(episode.related_signal_support for episode in cluster), 6),
+            ),
+            (
+                "isolated_impulse",
+                float(any(episode.isolated_impulse for episode in cluster)),
             ),
             ("component_level", 1.0 if is_node else 0.0),
         ),
@@ -653,11 +921,15 @@ def detect_metrics(
     group_columns = ["source_file", "source_kind", "component", "signal"]
     work = work.sort_values(group_columns + ["minute_epoch_s"], kind="mergesort")
     episodes: list[_Episode] = []
+    series_records: dict[
+        tuple[str, str, str, str], list[Mapping[str, Any]]
+    ] = {}
     for keys, series in work.groupby(group_columns, sort=True, dropna=False):
         source_file, source_kind, component, signal = (str(value) for value in keys)
         records = series.sort_values("minute_epoch_s", kind="mergesort").to_dict(
             "records"
         )
+        series_records[(source_file, source_kind.lower(), component, signal)] = records
         episodes.extend(
             _episodes_for_series(
                 row_id=spec.row_id,
@@ -668,6 +940,14 @@ def detect_metrics(
                 records=records,
             )
         )
+
+    episodes = list(
+        _enrich_direct_io_episodes(
+            row_id=spec.row_id,
+            episodes=episodes,
+            series_records=series_records,
+        )
+    )
 
     if not episodes:
         return (), ()
@@ -687,7 +967,11 @@ def detect_metrics(
 
     # Facts are returned once even when (for example) one CPU row supports both
     # load and spike alternatives.  All candidate references resolve locally.
-    facts_by_id = {episode.fact.fact_id: episode.fact for episode in episodes}
+    facts_by_id = {
+        fact.fact_id: fact
+        for episode in episodes
+        for fact in (episode.fact, *episode.context_facts)
+    }
     facts = tuple(
         sorted(
             facts_by_id.values(),

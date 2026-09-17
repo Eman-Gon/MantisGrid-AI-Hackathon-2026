@@ -7,13 +7,14 @@ runtime metadata only below the caller-provided output directory.
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import timedelta
 import json
 import math
 from pathlib import Path
+import re
 import time
-from typing import Any, Iterable, Mapping, Sequence
+from typing import Any, Sequence
 
 import numpy as np
 import pandas as pd
@@ -197,6 +198,16 @@ def normalize_component(source_kind: str, raw_component: object) -> str:
             if value.endswith(suffix):
                 return value[: -len(suffix)]
     return value
+
+
+def service_component(component: object) -> str | None:
+    """Derive a service name from a pod replica while retaining the exact pod."""
+
+    value = str(component).strip()
+    if not value or re.fullmatch(r"node-\d+", value):
+        return None
+    match = re.fullmatch(r"(.+)-\d+", value)
+    return match.group(1) if match and match.group(1) else None
 
 
 def parse_mesh_components(cmdb_id: object) -> tuple[str, str] | None:
@@ -700,7 +711,7 @@ def _read_traces(
         if resolution < 0.9:
             warnings.append(
                 f"trace parent/child edge resolution was {resolution:.1%}; "
-                "unresolved cross-chunk parents were omitted"
+                "parents absent from the source or bounded lookup were omitted"
             )
     trace, trace_baseline = _finalize_trace(trace_chunks, edge=False)
     edges, edge_baseline = _finalize_trace(edge_chunks, edge=True)
@@ -797,13 +808,28 @@ def prepare_run(
 
     components: set[str] = set()
     if not metric.empty:
-        components.update(
-            metric.loc[metric.source_kind.isin(["container", "node"]), "component"]
+        metric_components = set(
+            metric.loc[
+                metric.source_kind.isin(["container", "node", "service"]),
+                "component",
+            ]
             .dropna()
             .astype(str)
         )
+        components.update(metric_components)
+        components.update(
+            derived
+            for component in metric_components
+            if (derived := service_component(component)) is not None
+        )
     if not trace.empty:
-        components.update(trace.component.dropna().astype(str))
+        trace_components = set(trace.component.dropna().astype(str))
+        components.update(trace_components)
+        components.update(
+            derived
+            for component in trace_components
+            if (derived := service_component(component)) is not None
+        )
 
     prepared_cases: dict[int | str, PreparedCase] = {}
     for spec in specs:

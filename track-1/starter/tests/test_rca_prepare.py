@@ -19,6 +19,7 @@ from rca.prepare import (  # noqa: E402
     normalize_component,
     parse_mesh_components,
     prepare_run,
+    service_component,
 )
 
 
@@ -117,6 +118,9 @@ class PreparationTests(unittest.TestCase):
         self.assertEqual(normalize_component("node", "node-6"), "node-6")
         self.assertEqual(normalize_component("runtime", "adservice.ts:8088"), "adservice")
         self.assertEqual(normalize_component("service", "adservice-grpc"), "adservice")
+        self.assertEqual(service_component("adservice-2"), "adservice")
+        self.assertEqual(service_component("adservice2-0"), "adservice2")
+        self.assertIsNone(service_component("node-6"))
         self.assertEqual(
             parse_mesh_components("adservice-0.destination.frontend.adservice"),
             ("frontend", "adservice-0"),
@@ -172,6 +176,7 @@ class PreparationTests(unittest.TestCase):
             self.assertEqual(len(prepared.scan_counts), 4)
             self.assertEqual(prepared.duration_audit.raw_unit, "microseconds")
             self.assertIn("emailservice-1", prepared.telemetry_components)
+            self.assertIn("emailservice", prepared.telemetry_components)
             self.assertIn("node-6", prepared.telemetry_components)
 
             case = prepared.for_case(27)
