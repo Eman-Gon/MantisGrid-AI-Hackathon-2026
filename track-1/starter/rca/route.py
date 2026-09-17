@@ -40,7 +40,19 @@ STRONG = ["zai-org/GLM-5.2", "zai-org/GLM-5.1"]
 SHOWN = 8                    # candidates the model sees
 FACTS_EACH = 3               # facts shown per candidate
 MARGIN = 0.8                 # escalate when second/first score ratio is above this
-MAX_TOKENS = 600
+
+# Thinking is off by default on both tiers: GLM's chain of thought counts as
+# output tokens (the priciest and slowest thing a call does) and on this task
+# GLM-5.2 regularly spent 4000 of them without reaching an answer -- 60-70 s a
+# case against a budget of one minute. The tiers differ by model size, which
+# is the comparison the eval is about. RCA_THINK=1 turns thinking on for the
+# strong tier, as an ablation.
+NO_THINK = {"extra_body": {"chat_template_kwargs": {"enable_thinking": False}}, "max_tokens": 700}
+THINK = {"max_tokens": 2500}
+
+
+def _gen(tier: list[str]) -> dict:
+    return THINK if (tier is STRONG and os.environ.get("RCA_THINK")) else NO_THINK
 
 
 def models(tier: list[str]) -> list[str]:
@@ -173,7 +185,7 @@ def decide(case: CaseSpec, ranked: Sequence[CandidateEvent],
 
     def ask(tier: list[str]) -> tuple[list[Hypothesis], str, str]:
         ms = models(tier)
-        reply = llm.ask(ms, text, max_tokens=MAX_TOKENS, temperature=0)
+        reply = llm.ask(ms, text, temperature=0, **_gen(tier))
         used = next((m for m in ms if m in llm.usage), ms[0])
         d = _json(reply)
         return _to_hypotheses(d, case, ranked, facts, used), str(d.get("why", "")), used
@@ -181,6 +193,8 @@ def decide(case: CaseSpec, ranked: Sequence[CandidateEvent],
     # 1. cheap
     try:
         hyps, reasoning, used = ask(CHEAP)
+        if not hyps:
+            raise ValueError("no parseable picks in the reply")
         hyps, w = verify(hyps, case, ranked, facts, telemetry_components)
         notes += [f"cheap tier `{used}`"] + list(w)
     except Exception as e:
@@ -195,6 +209,8 @@ def decide(case: CaseSpec, ranked: Sequence[CandidateEvent],
         notes.append("escalated: " + "; ".join(why))
         try:
             h2, r2, used2 = ask(STRONG)
+            if not h2:
+                raise ValueError("no parseable picks in the reply")
             h2, w2 = verify(h2, case, ranked, facts, telemetry_components)
             if not any(x.startswith("hypothesis") for x in w2):
                 hyps, reasoning = h2, r2 or reasoning
