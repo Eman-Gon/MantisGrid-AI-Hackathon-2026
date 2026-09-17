@@ -1,6 +1,6 @@
 # Rule catalogue
 
-Every rule MantisGrid has armed against this estate, what it fires on, and what it
+Every rule MantisGrid AI has armed against this estate, what it fires on, and what it
 does **not** claim. `GET /v1/policies/rules` returns the same list at runtime with
 live counts.
 

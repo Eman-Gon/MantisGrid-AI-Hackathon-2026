@@ -1,11 +1,13 @@
 # How it's scored
 
-| | Weight |
-|---|---|
-| **Accuracy** on cases your agent hasn't seen | 20% |
-| **Evidence and explainability** — can you show why? | 35% |
-| **Evaluation quality** — your harness and your comparisons | 25% |
-| **Cost efficiency** — dollars spent per case, alongside accuracy | 20% |
+What we evaluate:
+
+- **Accuracy** on cases your agent hasn't seen
+- **Evidence and explainability** — can you show why?
+- **Evaluation quality** — your harness and your comparisons
+- **Cost efficiency** — dollars spent per case, alongside accuracy
+
+How much each is worth is in the participant agreement, which is the document that governs.
 
 Ties go to evidence, then to how honestly you state uncertainty.
 

@@ -135,11 +135,12 @@ the one clearly wrong answer.
 
 | What | Scored by |
 |---|---|
-| the running dashboard | judges: actionability, the drill-down, business framing, and what you did beyond the brief |
+| the running dashboard | judges: actionability, the drill-down, business framing, and any original insight |
 | `claims.json` | some fields against a ground truth we hold, the rest by judges reading your `basis`, `rationale` and `reasoning`; intervals and confidences are how calibration is scored |
 | `REPORT.md` | judges |
 
-The weights are in the track brief.
+What each of these is evaluated on is in the track brief; how much each is worth is in
+the participant agreement, which is the document that governs.
 
 ## Check it before you submit
 
@@ -153,9 +154,9 @@ Then do what we'll do: clone your repository into a fresh folder, generate `data
 
 ---
 
-## Beyond the three tiles
+## Past the three tiles
 
-None of these is required. They're where the "beyond the brief" score comes from.
+None of this is required. It is where original insight is found and credited.
 
 - **The drain-cost trade-off.** Pulling a bad node recovers reliability and destroys
   capacity. Where's the threshold? Defend it.

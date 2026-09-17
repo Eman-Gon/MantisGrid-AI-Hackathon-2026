@@ -51,12 +51,14 @@ presentation of three minutes or less showing the project working. Details:
 
 ## How you're judged
 
-| | Weight |
-|---|---|
-| **Accuracy** on cases your agent hasn't seen | 20% |
-| **Evidence and explainability** — can you show why? | 35% |
-| **Evaluation quality** — your harness and your comparisons | 25% |
-| **Cost efficiency** — dollars and wall-clock, read alongside accuracy | 20% |
+What we evaluate:
+
+- **Accuracy** on cases your agent hasn't seen
+- **Evidence and explainability** — can you show why?
+- **Evaluation quality** — your harness and your comparisons
+- **Cost efficiency** — dollars and wall-clock, read alongside accuracy
+
+How much each is worth is in the participant agreement, which is the document that governs.
 
 The state of the art gets about **one case in nine**, so most answers will be wrong.
 Build for that. Full detail: `docs/scoring.md`

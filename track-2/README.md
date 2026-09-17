@@ -52,13 +52,15 @@ presentation of three minutes or less showing the project working. Details:
 
 ## How you're judged
 
-| | Weight |
-|---|---|
-| **Actionability** — does a non-engineer know what to *do* after 30 seconds? | 25% |
-| **Cost of being wrong**, and calibration | 25% |
-| **Evidence drill-down** — can you click from a business number to the raw data? | 20% |
-| **Business framing** — every number in dollars, hours or % of capacity | 20% |
-| **Beyond the brief** — the fourth thing, after the three tiles | 10% |
+What we evaluate:
+
+- **Actionability** — does a non-engineer know what to *do* after 30 seconds?
+- **Cost of being wrong**, and calibration
+- **Evidence drill-down** — can you click from a business number to the raw data?
+- **Business framing** — every number in dollars, hours or % of capacity
+- **Original insight** — what you found that we didn't think to ask for
+
+How much each is worth is in the participant agreement, which is the document that governs.
 
 ## The guides
 
