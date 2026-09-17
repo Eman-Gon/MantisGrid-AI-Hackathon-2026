@@ -14,6 +14,7 @@ sys.path.insert(0, str(STARTER))
 
 from rca.contracts import CaseSpec, REQUESTED_FIELDS, UTC_PLUS_8  # noqa: E402
 from rca.detect_metrics import detect_metrics  # noqa: E402
+from rca.rank import rank_events  # noqa: E402
 
 
 @dataclass(frozen=True)
@@ -222,6 +223,164 @@ class MetricDetectorTests(unittest.TestCase):
         self.assertEqual(facts[0].observed, 502.5)
         self.assertEqual(facts[0].baseline, 0.0)
         self.assertIn("delta", facts[0].method)
+
+    def test_persistent_io_context_outweighs_a_larger_single_impulse(self) -> None:
+        rows = [
+            # Large, uncorroborated read impulse.  The equivalent byte-rate
+            # signal is just below the event threshold and await peaked before
+            # this onset, so neither is independent post-onset support.
+            {
+                "source_file": "metric_node.csv",
+                "source_kind": "node",
+                "component": "node-1",
+                "signal": "system.io.r_await",
+                "minute_epoch_s": self.start_s + 4 * 60,
+                "mean": 30.0,
+                "min": 30.0,
+                "max": 30.0,
+                "delta": 0.0,
+                "baseline_mean": 0.0,
+                "baseline_std": 5.0,
+            },
+            {
+                "source_file": "metric_node.csv",
+                "source_kind": "node",
+                "component": "node-1",
+                "signal": "system.io.r_s",
+                "minute_epoch_s": self.start_s + 5 * 60,
+                "mean": 989.0,
+                "min": 989.0,
+                "max": 989.0,
+                "delta": 989.0,
+                "baseline_mean": 0.0,
+                "baseline_std": 42.68,
+                "baseline_delta_mean": 0.0,
+                "baseline_delta_std": 42.68,
+            },
+            {
+                "source_file": "metric_node.csv",
+                "source_kind": "node",
+                "component": "node-1",
+                "signal": "system.io.r_s",
+                "minute_epoch_s": self.start_s + 6 * 60,
+                "mean": 0.0,
+                "min": 0.0,
+                "max": 0.0,
+                "delta": -989.0,
+                "baseline_mean": 0.0,
+                "baseline_std": 42.68,
+                "baseline_delta_mean": 0.0,
+                "baseline_delta_std": 42.68,
+            },
+            {
+                "source_file": "metric_node.csv",
+                "source_kind": "node",
+                "component": "node-1",
+                "signal": "system.io.rkb_s",
+                "minute_epoch_s": self.start_s + 5 * 60,
+                "mean": 59.99,
+                "min": 59.99,
+                "max": 59.99,
+                "delta": 59.99,
+                "baseline_mean": 0.0,
+                "baseline_std": 10.0,
+                "baseline_delta_mean": 0.0,
+                "baseline_delta_std": 10.0,
+            },
+            {
+                "source_file": "metric_node.csv",
+                "source_kind": "node",
+                "component": "node-1",
+                "signal": "system.io.rkb_s",
+                "minute_epoch_s": self.start_s + 6 * 60,
+                "mean": 0.0,
+                "min": 0.0,
+                "max": 0.0,
+                "delta": -59.99,
+                "baseline_mean": 0.0,
+                "baseline_std": 10.0,
+                "baseline_delta_mean": 0.0,
+                "baseline_delta_std": 10.0,
+            },
+            # Smaller write deviation with two kinds of post-onset context:
+            # the throughput level persists and its directional await rises.
+            {
+                "source_file": "metric_node.csv",
+                "source_kind": "node",
+                "component": "node-6",
+                "signal": "system.io.w_s",
+                "minute_epoch_s": self.start_s + 9 * 60,
+                "mean": 502.5,
+                "min": 502.5,
+                "max": 502.5,
+                "delta": 502.5,
+                "baseline_mean": 8.0,
+                "baseline_std": 187.6,
+                "baseline_delta_mean": 0.0,
+                "baseline_delta_std": 76.0,
+            },
+            {
+                "source_file": "metric_node.csv",
+                "source_kind": "node",
+                "component": "node-6",
+                "signal": "system.io.w_s",
+                "minute_epoch_s": self.start_s + 10 * 60,
+                "mean": 171.0,
+                "min": 171.0,
+                "max": 171.0,
+                "delta": -331.5,
+                "baseline_mean": 8.0,
+                "baseline_std": 187.6,
+                "baseline_delta_mean": 0.0,
+                "baseline_delta_std": 76.0,
+            },
+            {
+                "source_file": "metric_node.csv",
+                "source_kind": "node",
+                "component": "node-6",
+                "signal": "system.io.w_await",
+                "minute_epoch_s": self.start_s + 9 * 60,
+                "mean": 30.32,
+                "min": 30.32,
+                "max": 30.32,
+                "delta": 0.0,
+                "baseline_mean": 0.5,
+                "baseline_std": 18.6,
+            },
+            {
+                "source_file": "metric_node.csv",
+                "source_kind": "node",
+                "component": "node-6",
+                "signal": "system.io.w_await",
+                "minute_epoch_s": self.start_s + 10 * 60,
+                "mean": 49.88,
+                "min": 49.88,
+                "max": 49.88,
+                "delta": 0.0,
+                "baseline_mean": 0.5,
+                "baseline_std": 18.6,
+            },
+        ]
+        events, facts = self._detect(rows)
+        by_component = {event.component: event for event in events}
+        self.assertEqual(set(by_component), {"node-1", "node-6"})
+
+        impulse = by_component["node-1"]
+        supported = by_component["node-6"]
+        impulse_features = dict(impulse.feature_scores)
+        supported_features = dict(supported.feature_scores)
+        self.assertGreater(impulse_features["raw_magnitude"], 20.0)
+        self.assertEqual(impulse_features["magnitude"], 6.0)
+        self.assertEqual(impulse_features["isolated_impulse"], 1.0)
+        self.assertGreater(supported_features["post_onset_persistence"], 0.2)
+        self.assertGreater(supported_features["related_signal_support"], 1.5)
+        self.assertEqual(supported_features["cross_signal"], 2.0)
+        self.assertEqual(supported_features["sustained_minutes"], 2.0)
+        self.assertEqual(supported_features["isolated_impulse"], 0.0)
+        self.assertGreater(supported.score, impulse.score)
+        self.assertEqual(rank_events(events, failure_count=1)[0].component, "node-6")
+        self.assertEqual(len(supported.supporting_fact_ids), 3)
+        self.assertTrue(set(supported.supporting_fact_ids) <= {fact.fact_id for fact in facts})
 
     def test_service_metrics_do_not_originate_root_candidates(self) -> None:
         events, facts = self._detect(

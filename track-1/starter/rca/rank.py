@@ -315,6 +315,34 @@ def _coalesce_sibling_replicas(
     return coalesced
 
 
+def _same_failure_cluster(first: CandidateEvent, second: CandidateEvent) -> bool:
+    first_onset = _finite(first.onset_epoch_s, math.inf)
+    second_onset = _finite(second.onset_epoch_s, math.inf)
+    if not math.isfinite(first_onset) or not math.isfinite(second_onset):
+        return False
+    return (
+        abs(first_onset - second_onset) <= _FUSION_WINDOW_S
+        and bool(_reason_families(first) & _reason_families(second))
+    )
+
+
+def _prefer_independent_events(
+    ranked: Sequence[CandidateEvent], failure_count: int
+) -> tuple[CandidateEvent, ...]:
+    """Spend result slots on distinct time/reason clusters before propagation."""
+
+    independent: list[CandidateEvent] = []
+    redundant: list[CandidateEvent] = []
+    for event in ranked:
+        if any(_same_failure_cluster(event, selected) for selected in independent):
+            redundant.append(event)
+        else:
+            independent.append(event)
+    if len(independent) < failure_count:
+        independent.extend(redundant[: failure_count - len(independent)])
+    return tuple(independent[:failure_count])
+
+
 def rank_events(
     candidates: Iterable[CandidateEvent],
     failure_count: int | None = None,
@@ -376,7 +404,7 @@ def rank_events(
         )
 
     ranked = [event for _, event in sorted(enumerate(fused), key=ranked_key)]
-    return tuple(ranked[:failure_count])
+    return _prefer_independent_events(ranked, failure_count)
 
 
 # Small aliases make the integration intent obvious without maintaining another
