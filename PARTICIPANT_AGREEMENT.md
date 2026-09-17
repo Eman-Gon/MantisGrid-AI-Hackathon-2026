@@ -80,7 +80,7 @@ PDT. Late submissions are not judged. A complete submission includes:
 3. A public source code repository — with API keys and secrets removed
    — including the AI-disclosure README from Section 5 and instructions to run
    the project.  
-4. A presentation of around 3 minutes showing the project actually working.
+4. A presentation of around 4 minutes showing the project actually working.
    Including a demo is strongly encouraged.
 
 Submissions must be in English and must not contain content that violates the Code of Conduct.

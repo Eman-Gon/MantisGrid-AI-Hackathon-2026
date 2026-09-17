@@ -16,7 +16,7 @@ Each track's `README.md` is its brief. Start there.
 **https://forms.gle/UbPSwZhKNfkovM8s5**
 
 It asks for your team, your project title and track, a public repository with the
-commit you want judged, and a presentation of around three minutes showing the
+commit you want judged, and a presentation of around four minutes showing the
 project working. Your track's `docs/submission.md` has the rest, including what the
 repository has to contain.
 

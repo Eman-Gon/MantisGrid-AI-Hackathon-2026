@@ -47,7 +47,7 @@ A repository we can run with one command, serving your dashboard on `:3000`, plu
 
 **Submit through https://forms.gle/UbPSwZhKNfkovM8s5, before September 17, 2026,
 3:00pm PDT.** The form also asks for your team, your project title, and a
-presentation of around three minutes showing the project working. Details:
+presentation of around four minutes showing the project working. Details:
 `docs/submission.md`.
 
 ## How you're judged

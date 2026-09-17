@@ -36,8 +36,11 @@ It asks for four things:
    assistants and agent frameworks you used, and say briefly what was AI-generated and
    what the team wrote. Using AI heavily is expected here; not disclosing it is the
    problem.
-4. **A presentation of around three minutes**, showing the project actually working.
-   A demo is strongly encouraged.
+4. **A presentation of around four minutes**, showing the project actually working.
+   A demo is strongly encouraged — and a headless agent still has plenty to show.
+   Run a case live (the reference agent takes about fifteen seconds), open the
+   `evidence/` file it just wrote, and walk through what it ruled out. Then show
+   your eval: the routed run against the single-model one.
 
 In English. One project, one track — if your work draws on both, tell us which
 track's judging focus to apply.
