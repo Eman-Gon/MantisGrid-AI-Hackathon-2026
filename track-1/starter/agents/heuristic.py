@@ -61,8 +61,8 @@ def failure_count(instruction: str) -> int:
     """The instruction states how many failures are in the window. Getting this
     wrong scores zero for the whole case however good the answer is."""
     t = instruction.lower()
-    for word, n in (("one failure", 1), ("a single failure", 1), ("two failures", 2),
-                    ("three failures", 3), ("four failures", 4)):
+    for word, n in (("one failure", 1), ("a single failure", 1), ("a failure", 1),
+                    ("two failures", 2), ("three failures", 3), ("four failures", 4)):
         if word in t:
             return n
     return 1

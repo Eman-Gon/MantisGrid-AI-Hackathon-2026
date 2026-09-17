@@ -1,0 +1,5 @@
+{
+  "holdout": [10, 17, 24, 35, 13, 20, 33],
+  "canary": [27, 38, 56],
+  "note": "holdout: one case per task type, mixed 1- and 2-failure, disjoint from canary. Frozen before tuning finished. Every compared config runs the same ids."
+}

@@ -40,6 +40,8 @@ def main() -> None:
     p.add_argument("--dataset", required=True)
     p.add_argument("--queries", required=True)
     p.add_argument("--cases", type=int, default=2)
+    p.add_argument("--row-ids", default="", help="e.g. 0,27 -- these rows instead of the first N")
+    p.add_argument("--agent", default="", help="module; default: whatever run.py defaults to")
     p.add_argument("--timeout", type=int, default=1800)
     args = p.parse_args()
 
@@ -51,10 +53,18 @@ def main() -> None:
 
     q = pd.read_csv(args.queries)
     out = Path(tempfile.mkdtemp(prefix="t1validate-"))
+    queries = Path(args.queries).resolve()
+    if args.row_ids:
+        ids = [int(x) for x in args.row_ids.split(",")]
+        q = q[q.row_id.isin(ids)]
+        queries = out / "queries.csv"
+        q.to_csv(queries, index=False)
+        args.cases = len(q)
 
     cmd = [sys.executable, "run.py", "--dataset", str(Path(args.dataset).resolve()),
-           "--queries", str(Path(args.queries).resolve()), "--out", str(out),
-           "--limit", str(args.cases), "--agent", os.environ.get("VAL_AGENT","agents.heuristic")]
+           "--queries", str(queries), "--out", str(out), "--limit", str(args.cases)]
+    if args.agent:
+        cmd += ["--agent", args.agent]
     print(f"\n$ {' '.join(cmd)}\n")
     try:
         r = subprocess.run(cmd, cwd=sub, timeout=args.timeout,
@@ -102,6 +112,20 @@ def main() -> None:
                           "is datetime, component, reason")
     say(OK if parsed_any else BAD, "at least one prediction parses")
 
+    # the other whole-case zero: the wrong number of failures
+    def stated(instr: str) -> int:
+        t = instr.lower()
+        for w, n in (("two failures", 2), ("three failures", 3), ("four failures", 4)):
+            if w in t:
+                return n
+        return 1
+    want = {int(r_.row_id): stated(r_.instruction) for r_ in q.itertuples(index=False)}
+    for r_ in pred.itertuples(index=False):
+        got = len([h for h in order.findall(str(r_.prediction)) if any(h)])
+        rid = int(r_.row_id)
+        say(OK if got == want.get(rid) else BAD,
+            f"row {rid}: instruction states {want.get(rid)} failure(s), prediction has {got}")
+
     ev = out / "evidence"
     if not ev.is_dir():
         say(BAD, "no evidence/ directory")
@@ -112,6 +136,11 @@ def main() -> None:
             say(BAD, f"evidence/ missing for row_id(s) {missing}")
         else:
             say(OK, f"evidence/ has one .md per case ({len(files)})")
+        need = ("## Answer", "## Confidence", "## Evidence", "## Ruled out")
+        for f in sorted(ev.glob("*.md")):
+            gone = [h for h in need if h not in f.read_text()]
+            say(OK if not gone else WARN, f"{f.name}: required headings"
+                + (f" missing {gone}" if gone else " all present"))
         thin = [f.name for f in ev.glob("*.md") if len(f.read_text().strip()) < 200]
         if thin:
             say(WARN, f"very short evidence files: {thin} — evidence is 35% of your "

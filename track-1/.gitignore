@@ -1,3 +1,5 @@
 # Track 1 telemetry is stored externally and linked here.
 data
 
+*.zip
+out/

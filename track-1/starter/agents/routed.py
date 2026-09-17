@@ -68,9 +68,14 @@ def solve(instruction: str, dataset_dir: Path, ctx: dict) -> Solution:
     a = analyse(instruction, dataset_dir)
     if not isinstance(a, Analysis):
         return a                               # nothing to rank; the baseline explains why
-    llm = LLM()
     fallback = [answer_for(a, c) for c in a.ranked.head(a.n).index]
     notes = []
+    try:
+        llm = LLM()
+    except Exception as e:                     # no key, no endpoint: still answer
+        sol = baseline(instruction, dataset_dir, ctx)
+        sol.evidence += f"\nNo model was reachable ({type(e).__name__}: {e}); this is the baseline's answer.\n"
+        return sol
 
     try:
         # 2. CHEAP: read the question

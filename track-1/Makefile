@@ -1,7 +1,7 @@
 # Bundles live in data/<SET>/ -- see GET_DATA.md.
 SET ?= Market-cloudbed-1
 SUB ?= starter
-PY  ?= python
+PY  ?= python3
 # which agent module run.py loads, e.g. AGENT=agents.routed (default: run.py's)
 AGENT_ARG := $(if $(AGENT),--agent $(AGENT),)
 
@@ -12,9 +12,9 @@ help:
 	@grep -E '^[a-z-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 	  awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-10s\033[0m %s\n", $$1, $$2}'
 
-validate: ## run your agent on 2 dev cases and check the output shape
-	VAL_AGENT=$(or $(AGENT),agents.heuristic) $(PY) scripts/validate_submission.py --submission $(SUB) \
-	  --dataset data/$(SET) --queries data/$(SET)/dev/query_dev.csv
+validate: ## run the DEFAULT agent on a one- and a two-failure dev case and check the output shape
+	$(PY) scripts/validate_submission.py --submission $(SUB) \
+	  --dataset data/$(SET) --queries data/$(SET)/dev/query_dev.csv --row-ids 0,27 $(AGENT_ARG)
 
 dev: ## run your agent over all 70 cases -> out/dev/ (N=20 for the first 20)
 	cd $(SUB) && $(PY) run.py --dataset ../data/$(SET) \
@@ -27,8 +27,8 @@ score: ## score out/dev/ against the answers
 cost: ## dollars per case and per model for out/dev/, from its usage.jsonl
 	cd $(SUB) && $(PY) cost.py ../out/dev/usage.jsonl
 
-docker: ## build your image and run 2 dev cases exactly as we will (uses FEATHERLESS_API_KEY)
-	docker build -t rca-submission $(SUB)
+docker: ## build the ROOT image and run 2 dev cases exactly as judges will (uses FEATHERLESS_API_KEY)
+	docker build -t rca-submission ..
 	rm -rf out/docker && mkdir -p out/docker
 	docker run --rm -e FEATHERLESS_API_KEY -e FEATHERLESS_BASE_URL \
 	  -v "$(CURDIR)/data/$(SET)":/data:ro -v "$(CURDIR)/out/docker":/out rca-submission \

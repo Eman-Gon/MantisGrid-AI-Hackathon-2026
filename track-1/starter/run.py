@@ -77,12 +77,38 @@ def format_prediction(answers: list[dict]) -> str:
     return "```json\n" + json.dumps(out, indent=4) + "\n```"
 
 
+def last_resort(instruction: str, dataset: Path, ctx: dict, tb: str) -> Solution:
+    """The answer when the agent raised: the free baseline if it runs, otherwise
+    exactly as many placeholder guesses as the instruction says there are
+    failures. Never an empty prediction."""
+    try:
+        from agents import heuristic
+        sol = heuristic.solve(instruction, dataset, ctx)
+        sol.evidence = ("AGENT RAISED -- this is the no-model baseline's answer\n\n"
+                        "```\n" + tb + "```\n\n" + sol.evidence)
+        return sol
+    except Exception:
+        tb += "\nBASELINE ALSO RAISED\n" + traceback.format_exc()
+    n, when = 1, ""
+    try:
+        from agents.heuristic import failure_count, parse_window
+        n = failure_count(instruction)
+        win = parse_window(instruction)
+        when = win[0].strftime("%Y-%m-%d %H:%M:%S") if win else ""
+    except Exception:
+        pass
+    guess = {"datetime": when, "component": "unknown", "reason": "container CPU load"}
+    return Solution(prediction=format_prediction([guess] * n),
+                    evidence="AGENT RAISED -- placeholder guess, no analysis\n\n```\n"
+                             + tb + "```")
+
+
 def main() -> None:
     p = argparse.ArgumentParser()
     p.add_argument("--dataset", required=True, help="bundle dir, containing telemetry/")
     p.add_argument("--queries", required=True, help="query.csv")
     p.add_argument("--out", required=True)
-    p.add_argument("--agent", default="agents.heuristic",
+    p.add_argument("--agent", default="agents.routed",
                    help="module exposing solve(instruction, dataset_dir, ctx)")
     p.add_argument("--limit", type=int, default=0, help="first N cases only")
     p.add_argument("--resume", action="store_true",
@@ -94,6 +120,8 @@ def main() -> None:
     (out / "evidence").mkdir(parents=True, exist_ok=True)
 
     queries = pd.read_csv(args.queries)
+    # A dev split carries the answers. The agent must never see them.
+    queries = queries.drop(columns=["scoring_points"], errors="ignore")
     if args.limit:
         queries = queries.head(args.limit)
 
@@ -107,7 +135,16 @@ def main() -> None:
         print(f"resuming: {len(done)} case(s) already done")
 
     agent = importlib.import_module(args.agent)
-    ctx = {"dataset_dir": dataset, "out_dir": out}
+    ctx = {"dataset_dir": dataset, "out_dir": out, "queries": queries}
+    # Optional: an agent may look at every window up front so it scans each
+    # telemetry file once for the whole run instead of once per case.
+    if hasattr(agent, "prepare"):
+        t0 = time.time()
+        try:
+            agent.prepare(dataset, queries, ctx)
+        except Exception:
+            print("prepare() raised; continuing per case\n" + traceback.format_exc())
+        print(f"prepare: {time.time() - t0:.1f}s")
 
     for r in queries.itertuples(index=False):
         rid = int(r.row_id)
@@ -117,10 +154,10 @@ def main() -> None:
         try:
             sol = agent.solve(r.instruction, dataset, ctx)
         except Exception:
-            # A crashed case must not lose the run. Empty scores zero, which is
-            # what a crash deserves, and the traceback lands in the evidence.
-            sol = Solution(prediction="", evidence="AGENT RAISED\n\n```\n"
-                           + traceback.format_exc() + "```")
+            # A crashed case must not lose the run -- and a blank answer scores
+            # the same zero as a wrong one, so guess anyway. The traceback lands
+            # in the evidence so the failure is visible.
+            sol = last_resort(r.instruction, dataset, ctx, traceback.format_exc())
         wall = time.time() - t0
 
         (out / "evidence" / f"{rid}.md").write_text(sol.evidence or "_no evidence_\n")
