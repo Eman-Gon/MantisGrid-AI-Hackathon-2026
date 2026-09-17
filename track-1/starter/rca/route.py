@@ -81,9 +81,11 @@ def describe(case: CaseSpec, ranked: Sequence[CandidateEvent],
              facts: Mapping[str, EvidenceFact]) -> str:
     lines = []
     for i, c in enumerate(ranked[:SHOWN]):
+        level = (f"  SERVICE-LEVEL: replicas {list(c.alternatives)} all deviated together"
+                 if c.alternatives else "")
         lines.append(f"[{i}] {c.component}  onset={format_utc8(c.onset_epoch_s)}  "
                      f"score={c.score:.2f}  modality={c.modality or '?'}  "
-                     f"reasons={list(c.reason_candidates[:3])}")
+                     f"reasons={list(c.reason_candidates[:3])}{level}")
         shown = 0
         for fid in c.supporting_fact_ids:
             f = facts.get(fid)
@@ -111,7 +113,10 @@ def prompt(case: CaseSpec, ranked: Sequence[CandidateEvent],
         "prefer the earliest onset with a plausible mechanism. A node-* component takes a "
         "node reason; a pod takes a container reason. Network reasons need trace latency or "
         "packet/retransmit evidence. Two failures are two distinct events, possibly on the "
-        "same component.\n\n"
+        "same component. A candidate named without a replica suffix (e.g. cartservice, not "
+        "cartservice-1) means every replica of that service deviated together: the fault was "
+        "injected on the service, so name the service -- pick a single pod only when it "
+        "clearly moved first or alone.\n\n"
         f"Legal reasons: {json.dumps(list(LEGAL_REASONS))}\n\n"
         f"Reply with JSON only, no prose:\n"
         '{"picks": [{"candidate": <index>, "reason": "<legal reason>", '

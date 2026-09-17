@@ -1,0 +1,214 @@
+{
+  "config": "routed",
+  "pinned_model": null,
+  "agent": "agents.routed",
+  "rc": 0,
+  "case_ids": [
+    10,
+    17,
+    24,
+    35,
+    13,
+    20,
+    33
+  ],
+  "n": 7,
+  "mean_score": 0.5714285714285714,
+  "solved": 3,
+  "strict_rate": 0.42857142857142855,
+  "by_task": {
+    "task_1": 1.0,
+    "task_2": 0.5,
+    "task_3": 1.0,
+    "task_4": 0.5,
+    "task_5": 0.0,
+    "task_6": 1.0,
+    "task_7": 0.0
+  },
+  "dollars_total": 0.016500935,
+  "dollars_per_case": 0.0023572764285714285,
+  "dollars_per_solved": 0.005500311666666667,
+  "wall_total_s": 74.58000000000001,
+  "wall_mean_s": 10.654285714285715,
+  "wall_p50_s": 10.05,
+  "wall_max_s": 13.96,
+  "harness_wall_s": 186.4408721923828,
+  "cases": [
+    {
+      "row_id": 10,
+      "task": "task_1",
+      "difficulty": "easy",
+      "score": 1.0,
+      "solved": true,
+      "passed": [
+        "2022-03-20 13:39:48",
+        "2022-03-20 13:51:51"
+      ],
+      "failed": [],
+      "wall_s": 9.08,
+      "dollars": 0.00021110000000000004,
+      "models": {
+        "zai-org/GLM-4.7-Flash": {
+          "prompt_tokens": 1900,
+          "completion_tokens": 219,
+          "calls": 1
+        }
+      }
+    },
+    {
+      "row_id": 17,
+      "task": "task_2",
+      "difficulty": "easy",
+      "score": 0.5,
+      "solved": false,
+      "passed": [
+        "container memory load"
+      ],
+      "failed": [
+        "container network packet corruption"
+      ],
+      "wall_s": 10.05,
+      "dollars": 0.000220575,
+      "models": {
+        "zai-org/GLM-4.7-Flash": {
+          "prompt_tokens": 1935,
+          "completion_tokens": 237,
+          "calls": 1
+        }
+      }
+    },
+    {
+      "row_id": 24,
+      "task": "task_3",
+      "difficulty": "easy",
+      "score": 1.0,
+      "solved": true,
+      "passed": [
+        "node-3"
+      ],
+      "failed": [],
+      "wall_s": 13.46,
+      "dollars": 0.00359573,
+      "models": {
+        "zai-org/GLM-4.7-Flash": {
+          "prompt_tokens": 1962,
+          "completion_tokens": 183,
+          "calls": 1
+        },
+        "zai-org/GLM-5.2": {
+          "prompt_tokens": 1963,
+          "completion_tokens": 147,
+          "calls": 1
+        }
+      }
+    },
+    {
+      "row_id": 35,
+      "task": "task_4",
+      "difficulty": "middle",
+      "score": 0.5,
+      "solved": false,
+      "passed": [
+        "container read I/O load",
+        "2022-03-21 01:20:30"
+      ],
+      "failed": [
+        "2022-03-21 01:06:45",
+        "container network packet retransmission"
+      ],
+      "wall_s": 13.96,
+      "dollars": 0.0027902,
+      "models": {
+        "zai-org/GLM-4.7-Flash": {
+          "prompt_tokens": 1280,
+          "completion_tokens": 205,
+          "calls": 1
+        },
+        "zai-org/GLM-5.2": {
+          "prompt_tokens": 1281,
+          "completion_tokens": 189,
+          "calls": 1
+        }
+      }
+    },
+    {
+      "row_id": 13,
+      "task": "task_5",
+      "difficulty": "middle",
+      "score": 0.0,
+      "solved": false,
+      "passed": [],
+      "failed": [
+        "currencyservice-0",
+        "2022-03-20 16:31:44"
+      ],
+      "wall_s": 10.31,
+      "dollars": 0.003450085,
+      "models": {
+        "zai-org/GLM-4.7-Flash": {
+          "prompt_tokens": 1909,
+          "completion_tokens": 167,
+          "calls": 1
+        },
+        "zai-org/GLM-5.2": {
+          "prompt_tokens": 1910,
+          "completion_tokens": 133,
+          "calls": 1
+        }
+      }
+    },
+    {
+      "row_id": 20,
+      "task": "task_6",
+      "difficulty": "middle",
+      "score": 1.0,
+      "solved": true,
+      "passed": [
+        "shippingservice2-0",
+        "container CPU load"
+      ],
+      "failed": [],
+      "wall_s": 8.91,
+      "dollars": 0.00360762,
+      "models": {
+        "zai-org/GLM-4.7-Flash": {
+          "prompt_tokens": 1948,
+          "completion_tokens": 165,
+          "calls": 1
+        },
+        "zai-org/GLM-5.2": {
+          "prompt_tokens": 1949,
+          "completion_tokens": 156,
+          "calls": 1
+        }
+      }
+    },
+    {
+      "row_id": 33,
+      "task": "task_7",
+      "difficulty": "hard",
+      "score": 0.0,
+      "solved": false,
+      "passed": [],
+      "failed": [
+        "cartservice",
+        "container network packet retransmission",
+        "2022-03-21 00:37:25"
+      ],
+      "wall_s": 8.81,
+      "dollars": 0.0026256250000000004,
+      "models": {
+        "zai-org/GLM-4.7-Flash": {
+          "prompt_tokens": 1385,
+          "completion_tokens": 157,
+          "calls": 1
+        },
+        "zai-org/GLM-5.2": {
+          "prompt_tokens": 1386,
+          "completion_tokens": 121,
+          "calls": 1
+        }
+      }
+    }
+  ]
+}

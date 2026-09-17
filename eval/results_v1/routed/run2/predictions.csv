@@ -1,0 +1,79 @@
+row_id,prediction,task_index,wall_s,prompt_tokens,completion_tokens,calls
+10,"```json
+{
+    ""1"": {
+        ""root cause occurrence datetime"": ""2022-03-20 13:34:00"",
+        ""root cause component"": ""checkoutservice-1"",
+        ""root cause reason"": ""container network latency""
+    },
+    ""2"": {
+        ""root cause occurrence datetime"": ""2022-03-20 13:40:00"",
+        ""root cause component"": ""node-4"",
+        ""root cause reason"": ""node CPU spike""
+    }
+}
+```",task_1,8.23,1900,231,1
+13,"```json
+{
+    ""1"": {
+        ""root cause occurrence datetime"": ""2022-03-20 16:30:00"",
+        ""root cause component"": ""cartservice2-0"",
+        ""root cause reason"": ""container memory load""
+    }
+}
+```",task_5,12.3,3819,319,2
+17,"```json
+{
+    ""1"": {
+        ""root cause occurrence datetime"": ""2022-03-20 18:07:00"",
+        ""root cause component"": ""paymentservice-2"",
+        ""root cause reason"": ""container memory load""
+    },
+    ""2"": {
+        ""root cause occurrence datetime"": ""2022-03-20 18:24:00"",
+        ""root cause component"": ""checkoutservice-1"",
+        ""root cause reason"": ""container packet loss""
+    }
+}
+```",task_2,7.85,1935,227,1
+20,"```json
+{
+    ""1"": {
+        ""root cause occurrence datetime"": ""2022-03-20 20:23:00"",
+        ""root cause component"": ""shippingservice2-0"",
+        ""root cause reason"": ""container CPU load""
+    }
+}
+```",task_6,14.54,3897,339,2
+24,"```json
+{
+    ""1"": {
+        ""root cause occurrence datetime"": ""2022-03-20 22:56:00"",
+        ""root cause component"": ""node-3"",
+        ""root cause reason"": ""node disk read I/O consumption""
+    }
+}
+```",task_3,9.78,3925,311,2
+33,"```json
+{
+    ""1"": {
+        ""root cause occurrence datetime"": ""2022-03-21 00:36:00"",
+        ""root cause component"": ""node-1"",
+        ""root cause reason"": ""node CPU spike""
+    }
+}
+```",task_7,9.32,2771,275,2
+35,"```json
+{
+    ""1"": {
+        ""root cause occurrence datetime"": ""2022-03-21 01:00:00"",
+        ""root cause component"": ""currencyservice-0"",
+        ""root cause reason"": ""container memory load""
+    },
+    ""2"": {
+        ""root cause occurrence datetime"": ""2022-03-21 01:20:00"",
+        ""root cause component"": ""productcatalogservice-2"",
+        ""root cause reason"": ""container read I/O load""
+    }
+}
+```",task_4,17.4,2561,406,2

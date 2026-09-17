@@ -96,6 +96,10 @@ def render(case: CaseSpec, hypotheses: Sequence[Hypothesis],
                else f"chosen by `{h.model_used}`")
         line = (f"{i}. **{_confidence_word(h.confidence)}** ({h.confidence:.2f}) — {how}; "
                 f"{n} supporting fact(s) from {', '.join(sorted(src)) or 'no source'}.")
+        cand = next((c for c in ranked if c.component == h.component and c.alternatives), None)
+        if cand:
+            line += (f" Service-level: replicas {', '.join(f'`{p}`' for p in cand.alternatives)} "
+                     f"deviated together, so the fault is placed on the service.")
         if n == 0:
             line += " No fact supports this slot: it is a guess, not a diagnosis."
         elif len(src) == 1:

@@ -1,0 +1,14 @@
+prepared 7 case(s): 111s, 48 components, 8 file scan(s)
+  prepare warning: trace parent/child edge resolution was 22.9%; unresolved cross-chunk parents were omitted
+prepare: 110.7s
+  row  10     6.1s     1,901 tok  ```json {     "1": {         "root cause occurrence datetime
+  row  17     4.3s     1,936 tok  ```json {     "1": {         "root cause occurrence datetime
+  row  24    21.9s     1,963 tok  ```json {     "1": {         "root cause occurrence datetime
+  row  35     5.7s     1,281 tok  ```json {     "1": {         "root cause occurrence datetime
+  row  13     4.6s     1,910 tok  ```json {     "1": {         "root cause occurrence datetime
+  row  20     8.1s     1,949 tok  ```json {     "1": {         "root cause occurrence datetime
+  row  33     3.5s     1,386 tok  ```json {     "1": {         "root cause occurrence datetime
+
+7 case(s) -> /Users/rajashree/Downloads/Mantisgrid/MantisGrid-AI-Hackathon-2026/eval/results/single-strong/run1/predictions.csv
+wall-clock: mean 7.8s  max 21.9s  total 0.9min
+tokens: mean 1,761 in / 177 out per case

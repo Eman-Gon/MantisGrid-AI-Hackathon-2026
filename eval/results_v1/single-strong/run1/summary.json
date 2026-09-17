@@ -1,0 +1,189 @@
+{
+  "config": "single-strong",
+  "pinned_model": "zai-org/GLM-5.2",
+  "agent": "agents.routed",
+  "rc": 0,
+  "case_ids": [
+    10,
+    17,
+    24,
+    35,
+    13,
+    20,
+    33
+  ],
+  "n": 7,
+  "mean_score": 0.42857142857142855,
+  "solved": 2,
+  "strict_rate": 0.2857142857142857,
+  "by_task": {
+    "task_1": 1.0,
+    "task_2": 0.5,
+    "task_3": 0.0,
+    "task_4": 0.5,
+    "task_5": 0.0,
+    "task_6": 1.0,
+    "task_7": 0.0
+  },
+  "dollars_total": 0.022708000000000002,
+  "dollars_per_case": 0.003244,
+  "dollars_per_solved": 0.011354000000000001,
+  "wall_total_s": 54.25,
+  "wall_mean_s": 7.75,
+  "wall_p50_s": 5.72,
+  "wall_max_s": 21.91,
+  "harness_wall_s": 165.96868324279785,
+  "cases": [
+    {
+      "row_id": 10,
+      "task": "task_1",
+      "difficulty": "easy",
+      "score": 1.0,
+      "solved": true,
+      "passed": [
+        "2022-03-20 13:39:48",
+        "2022-03-20 13:51:51"
+      ],
+      "failed": [],
+      "wall_s": 6.13,
+      "dollars": 0.0037085999999999994,
+      "models": {
+        "zai-org/GLM-5.2": {
+          "prompt_tokens": 1901,
+          "completion_tokens": 238,
+          "calls": 1
+        }
+      }
+    },
+    {
+      "row_id": 17,
+      "task": "task_2",
+      "difficulty": "easy",
+      "score": 0.5,
+      "solved": false,
+      "passed": [
+        "container memory load"
+      ],
+      "failed": [
+        "container network packet corruption"
+      ],
+      "wall_s": 4.31,
+      "dollars": 0.0037443999999999997,
+      "models": {
+        "zai-org/GLM-5.2": {
+          "prompt_tokens": 1936,
+          "completion_tokens": 235,
+          "calls": 1
+        }
+      }
+    },
+    {
+      "row_id": 24,
+      "task": "task_3",
+      "difficulty": "easy",
+      "score": 0.0,
+      "solved": false,
+      "passed": [],
+      "failed": [
+        "node-3"
+      ],
+      "wall_s": 21.91,
+      "dollars": 0.0035093999999999998,
+      "models": {
+        "zai-org/GLM-5.2": {
+          "prompt_tokens": 1963,
+          "completion_tokens": 173,
+          "calls": 1
+        }
+      }
+    },
+    {
+      "row_id": 35,
+      "task": "task_4",
+      "difficulty": "middle",
+      "score": 0.5,
+      "solved": false,
+      "passed": [
+        "container read I/O load",
+        "2022-03-21 01:20:30"
+      ],
+      "failed": [
+        "container network packet retransmission",
+        "2022-03-21 01:06:45"
+      ],
+      "wall_s": 5.72,
+      "dollars": 0.002691,
+      "models": {
+        "zai-org/GLM-5.2": {
+          "prompt_tokens": 1281,
+          "completion_tokens": 204,
+          "calls": 1
+        }
+      }
+    },
+    {
+      "row_id": 13,
+      "task": "task_5",
+      "difficulty": "middle",
+      "score": 0.0,
+      "solved": false,
+      "passed": [],
+      "failed": [
+        "2022-03-20 16:31:44",
+        "currencyservice-0"
+      ],
+      "wall_s": 4.61,
+      "dollars": 0.003224,
+      "models": {
+        "zai-org/GLM-5.2": {
+          "prompt_tokens": 1910,
+          "completion_tokens": 125,
+          "calls": 1
+        }
+      }
+    },
+    {
+      "row_id": 20,
+      "task": "task_6",
+      "difficulty": "middle",
+      "score": 1.0,
+      "solved": true,
+      "passed": [
+        "shippingservice2-0",
+        "container CPU load"
+      ],
+      "failed": [],
+      "wall_s": 8.11,
+      "dollars": 0.0033974,
+      "models": {
+        "zai-org/GLM-5.2": {
+          "prompt_tokens": 1949,
+          "completion_tokens": 152,
+          "calls": 1
+        }
+      }
+    },
+    {
+      "row_id": 33,
+      "task": "task_7",
+      "difficulty": "hard",
+      "score": 0.0,
+      "solved": false,
+      "passed": [],
+      "failed": [
+        "2022-03-21 00:37:25",
+        "cartservice",
+        "container network packet retransmission"
+      ],
+      "wall_s": 3.46,
+      "dollars": 0.0024332,
+      "models": {
+        "zai-org/GLM-5.2": {
+          "prompt_tokens": 1386,
+          "completion_tokens": 112,
+          "calls": 1
+        }
+      }
+    }
+  ]
+}

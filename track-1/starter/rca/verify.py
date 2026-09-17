@@ -16,6 +16,7 @@ only move confidence, and that is route.py's job.
 """
 from __future__ import annotations
 
+import re
 from collections.abc import Iterable, Mapping, Sequence
 
 from .contracts import (
@@ -32,6 +33,15 @@ from .contracts import (
 WINDOW_SLACK_S = 120.0
 
 DEFAULT_CONFIDENCE = 0.25   # a deterministic fill-in is a narrowed guess, not a shot in the dark
+
+_POD = re.compile(r"^(.+)-(\d+)$")
+
+
+def _key(component: str, reason: str) -> tuple[str, str]:
+    """A pod and its service with the same reason are one failure, not two."""
+    m = _POD.match(component)
+    svc = m.group(1) if m and not component.startswith("node-") else component
+    return (svc, reason)
 
 
 def _known_components(candidates: Iterable[CandidateEvent],
@@ -96,7 +106,7 @@ def verify(hypotheses: Sequence[Hypothesis], case: CaseSpec,
 
     for i, h in enumerate(hypotheses[: case.failure_count], 1):
         problems = check(h, case, known, facts)
-        key = (h.component, h.reason_enum)
+        key = _key(h.component, h.reason_enum)
         if key in used:
             problems.append(f"duplicates hypothesis {key}")
         if problems:
@@ -109,8 +119,8 @@ def verify(hypotheses: Sequence[Hypothesis], case: CaseSpec,
                         f"{case.failure_count} failure(s); extras dropped")
 
     # refill from the deterministic ranking, in order, skipping used pairs
-    pool = [c for c in ranked if (c.component, c.reason_candidates[0]) not in used]
-    pool += [c for c in ranked if (c.component, c.reason_candidates[0]) in used]
+    pool = [c for c in ranked if _key(c.component, c.reason_candidates[0]) not in used]
+    pool += [c for c in ranked if _key(c.component, c.reason_candidates[0]) in used]
     while len(kept) < case.failure_count:
         if pool:
             c = pool.pop(0)
@@ -123,7 +133,7 @@ def verify(hypotheses: Sequence[Hypothesis], case: CaseSpec,
             h = placeholder(case, known)
             warnings.append(f"slot {len(kept) + 1} is a placeholder: no candidate available")
         kept.append(h)
-        used.add((h.component, h.reason_enum))
+        used.add(_key(h.component, h.reason_enum))
 
     # the answer is written in time order
     kept.sort(key=lambda h: h.onset_epoch_s)

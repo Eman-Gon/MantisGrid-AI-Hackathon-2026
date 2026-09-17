@@ -1,0 +1,6 @@
+
+== routed run1: 7 case(s) [10, 17, 24, 35, 13, 20, 33] -> /Users/rajashree/Downloads/Mantisgrid/MantisGrid-AI-Hackathon-2026/eval/results/routed/run1
+   mean 0.571  solved 3/7  $0.0024/case  10.7s/case  rc=0
+
+== routed run2: 7 case(s) [10, 17, 24, 35, 13, 20, 33] -> /Users/rajashree/Downloads/Mantisgrid/MantisGrid-AI-Hackathon-2026/eval/results/routed/run2
+   mean 0.500  solved 2/7  $0.0024/case  11.3s/case  rc=0

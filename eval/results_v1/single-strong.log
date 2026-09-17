@@ -1,0 +1,6 @@
+
+== single-strong run1: 7 case(s) [10, 17, 24, 35, 13, 20, 33] -> /Users/rajashree/Downloads/Mantisgrid/MantisGrid-AI-Hackathon-2026/eval/results/single-strong/run1
+   mean 0.429  solved 2/7  $0.0032/case  7.8s/case  rc=0
+
+== single-strong run2: 7 case(s) [10, 17, 24, 35, 13, 20, 33] -> /Users/rajashree/Downloads/Mantisgrid/MantisGrid-AI-Hackathon-2026/eval/results/single-strong/run2
+   mean 0.429  solved 2/7  $0.0033/case  9.8s/case  rc=0

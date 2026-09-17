@@ -1,0 +1,7 @@
+{"row_id": 10, "task_index": "task_1", "wall_s": 6.13, "prompt_tokens": 1901, "completion_tokens": 238, "calls": 1, "models": {"zai-org/GLM-5.2": {"prompt_tokens": 1901, "completion_tokens": 238, "calls": 1}}}
+{"row_id": 17, "task_index": "task_2", "wall_s": 4.31, "prompt_tokens": 1936, "completion_tokens": 235, "calls": 1, "models": {"zai-org/GLM-5.2": {"prompt_tokens": 1936, "completion_tokens": 235, "calls": 1}}}
+{"row_id": 24, "task_index": "task_3", "wall_s": 21.91, "prompt_tokens": 1963, "completion_tokens": 173, "calls": 1, "models": {"zai-org/GLM-5.2": {"prompt_tokens": 1963, "completion_tokens": 173, "calls": 1}}}
+{"row_id": 35, "task_index": "task_4", "wall_s": 5.72, "prompt_tokens": 1281, "completion_tokens": 204, "calls": 1, "models": {"zai-org/GLM-5.2": {"prompt_tokens": 1281, "completion_tokens": 204, "calls": 1}}}
+{"row_id": 13, "task_index": "task_5", "wall_s": 4.61, "prompt_tokens": 1910, "completion_tokens": 125, "calls": 1, "models": {"zai-org/GLM-5.2": {"prompt_tokens": 1910, "completion_tokens": 125, "calls": 1}}}
+{"row_id": 20, "task_index": "task_6", "wall_s": 8.11, "prompt_tokens": 1949, "completion_tokens": 152, "calls": 1, "models": {"zai-org/GLM-5.2": {"prompt_tokens": 1949, "completion_tokens": 152, "calls": 1}}}
+{"row_id": 33, "task_index": "task_7", "wall_s": 3.46, "prompt_tokens": 1386, "completion_tokens": 112, "calls": 1, "models": {"zai-org/GLM-5.2": {"prompt_tokens": 1386, "completion_tokens": 112, "calls": 1}}}
