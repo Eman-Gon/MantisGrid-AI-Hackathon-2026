@@ -135,7 +135,8 @@ the one clearly wrong answer.
 
 | What | Scored by |
 |---|---|
-| the running dashboard | judges: actionability, the drill-down, business framing, and any original insight |
+| the running dashboard | judges: actionability, the drill-down, business framing, what you
+built on the MantisGrid AI API and its MCP tools, and any original insight |
 | `claims.json` | some fields against a ground truth we hold, the rest by judges reading your `basis`, `rationale` and `reasoning`; intervals and confidences are how calibration is scored |
 | `REPORT.md` | judges |
 

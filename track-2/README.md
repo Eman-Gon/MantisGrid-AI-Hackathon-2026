@@ -58,6 +58,9 @@ What we evaluate:
 - **Cost of being wrong**, and calibration
 - **Evidence drill-down** — can you click from a business number to the raw data?
 - **Business framing** — every number in dollars, hours or % of capacity
+- **Use of the MantisGrid AI API and its MCP tools** — the findings, the causal
+  analysis and the rule catalogue are there to be built on. An agent or a chat
+  over the data is one way; it is an example, not the brief.
 - **Original insight** — what you found that we didn't think to ask for
 
 How much each is worth is in the participant agreement, which is the document that governs.
