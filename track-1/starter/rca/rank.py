@@ -18,6 +18,7 @@ from collections.abc import Iterable, Sequence
 from .contracts import CandidateEvent, CaseSpec, stable_event_id
 
 _FUSION_WINDOW_S = 90.0
+_DIVERSITY_WINDOW_S = 180.0
 
 
 def _finite(value: object, default: float = 0.0) -> float:
@@ -321,7 +322,7 @@ def _same_failure_cluster(first: CandidateEvent, second: CandidateEvent) -> bool
     if not math.isfinite(first_onset) or not math.isfinite(second_onset):
         return False
     return (
-        abs(first_onset - second_onset) <= _FUSION_WINDOW_S
+        abs(first_onset - second_onset) <= _DIVERSITY_WINDOW_S
         and bool(_reason_families(first) & _reason_families(second))
     )
 

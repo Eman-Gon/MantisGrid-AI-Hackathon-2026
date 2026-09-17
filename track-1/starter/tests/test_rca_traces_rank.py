@@ -275,7 +275,7 @@ class EventRankerTests(unittest.TestCase):
             ),
             _candidate(
                 component="emailservice2-0",
-                onset=730.0,
+                onset=820.0,
                 score=9.0,
                 reason="container write I/O load",
                 event_id="write-propagation",
@@ -328,7 +328,7 @@ class EventRankerTests(unittest.TestCase):
         )
         propagation = _candidate(
             component="emailservice2-0",
-            onset=730.0,
+            onset=820.0,
             score=9.0,
             reason="container write I/O load",
             event_id="propagation",
@@ -345,9 +345,10 @@ class EventRankerTests(unittest.TestCase):
             fact_id="fact-read",
         )
 
+        redundant_only = rank_events([write, propagation], 2)
+        self.assertEqual(len(redundant_only), 2)
         self.assertEqual(
-            {event.event_id for event in rank_events([write, propagation], 2)},
-            {"write", "propagation"},
+            {event.event_id for event in redundant_only}, {"write", "propagation"}
         )
         self.assertEqual(
             [event.event_id for event in rank_events([write, propagation, read], 2)],
