@@ -80,7 +80,7 @@ PDT. Late submissions are not judged. A complete submission includes:
 3. A public source code repository — with API keys and secrets removed
    — including the AI-disclosure README from Section 5 and instructions to run
    the project.  
-4. A presentation of 3 minutes or less showing the project actually working.
+4. A presentation of around 3 minutes showing the project actually working.
    Including a demo is strongly encouraged.
 
 Submissions must be in English and must not contain content that violates the Code of Conduct.
@@ -106,8 +106,8 @@ team is eligible to win at most one award.
   of the participants who created them.  
 * By submitting, you grant the Organizer a non-exclusive, worldwide,
   royalty-free license to use, display, and reference your submission
-  (including the demo video and screenshots) for judging and for promoting this
-  and future Hackathons, for 3 years from submission.  
+  (including your presentation and screenshots) for judging and for promoting
+  this and future Hackathons, for 3 years from submission.  
 * You warrant your submission is your original work (per Section 4), that you
   have rights to everything in it, and that it does not infringe any third
   party's copyright, trademark, patent, privacy, or publicity rights.

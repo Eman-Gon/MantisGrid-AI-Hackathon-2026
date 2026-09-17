@@ -35,7 +35,7 @@ It asks for four things:
    assistants and agent frameworks you used, and say briefly what was AI-generated and
    what the team wrote. Using AI heavily is expected here; not disclosing it is the
    problem.
-4. **A presentation, three minutes or less**, showing the project actually working.
+4. **A presentation of around three minutes**, showing the project actually working.
    A demo is strongly encouraged.
 
 In English. One project, one track — if your work draws on both, tell us which
