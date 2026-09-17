@@ -108,7 +108,7 @@ def main() -> None:
     p.add_argument("--dataset", required=True, help="bundle dir, containing telemetry/")
     p.add_argument("--queries", required=True, help="query.csv")
     p.add_argument("--out", required=True)
-    p.add_argument("--agent", default="agents.routed",
+    p.add_argument("--agent", default="agents.rootroute",
                    help="module exposing solve(instruction, dataset_dir, ctx)")
     p.add_argument("--limit", type=int, default=0, help="first N cases only")
     p.add_argument("--resume", action="store_true",
@@ -135,21 +135,54 @@ def main() -> None:
         print(f"resuming: {len(done)} case(s) already done")
 
     agent = importlib.import_module(args.agent)
-    ctx = {"dataset_dir": dataset, "out_dir": out, "queries": queries}
-    # Optional: an agent may look at every window up front so it scans each
-    # telemetry file once for the whole run instead of once per case.
-    if hasattr(agent, "prepare"):
-        t0 = time.time()
-        try:
-            agent.prepare(dataset, queries, ctx)
-        except Exception:
-            print("prepare() raised; continuing per case\n" + traceback.format_exc())
-        print(f"prepare: {time.time() - t0:.1f}s")
+    query_columns = [
+        column
+        for column in ("row_id", "task_index", "instruction")
+        if column in queries.columns
+    ]
+    answer_free_queries = queries.loc[:, query_columns].copy()
+    ctx = {
+        "dataset_dir": dataset,
+        "out_dir": out,
+        "queries": answer_free_queries,
+    }
+
+    # Agents that need to scan large telemetry files may prepare every requested
+    # case in one pass.  Never expose development-only columns such as
+    # ``scoring_points`` to that hook: the judged query file does not contain
+    # them, and production analysis must remain answer-free.
+    prepare = getattr(agent, "prepare", None)
+    prepare_wall_s = 0.0
+    prepare_case_count = 0
+    if callable(prepare):
+        pending_queries = answer_free_queries[
+            ~answer_free_queries["row_id"].astype(int).isin(done)
+        ] if done else answer_free_queries
+        prepare_case_count = len(pending_queries)
+        if len(pending_queries):
+            prepare_started = time.time()
+            try:
+                prepared = prepare(dataset, pending_queries.copy(), ctx)
+                # RootRoute returns its prepared run; the upstream agent writes
+                # its own cache into ctx and returns None. Support both hooks.
+                if prepared is not None:
+                    ctx["prepared_run"] = prepared
+            except Exception:
+                print("prepare() raised; continuing per case\n" + traceback.format_exc())
+            prepare_wall_s = time.time() - prepare_started
+            print(f"prepare: {prepare_wall_s:.1f}s")
+    prepare_share_s = (
+        prepare_wall_s / prepare_case_count if prepare_case_count else 0.0
+    )
+    ctx["prepare_wall_s"] = prepare_wall_s
+    ctx["prepare_share_s"] = prepare_share_s
 
     for r in queries.itertuples(index=False):
         rid = int(r.row_id)
         if rid in done:
             continue
+        ctx["row_id"] = rid
+        ctx["task_index"] = getattr(r, "task_index", "")
         t0 = time.time()
         try:
             sol = agent.solve(r.instruction, dataset, ctx)
@@ -158,12 +191,18 @@ def main() -> None:
             # the same zero as a wrong one, so guess anyway. The traceback lands
             # in the evidence so the failure is visible.
             sol = last_resort(r.instruction, dataset, ctx, traceback.format_exc())
-        wall = time.time() - t0
+        solve_wall = time.time() - t0
+        # Preparation is shared across the pending cases.  Allocate an equal
+        # share so summing/averaging usage.jsonl reflects real end-to-end time
+        # instead of hiding the telemetry scan before the per-case loop.
+        wall = solve_wall + prepare_share_s
 
         (out / "evidence" / f"{rid}.md").write_text(sol.evidence or "_no evidence_\n")
         models = per_model(sol.usage or {})
         rec = {"row_id": rid, "prediction": sol.prediction,
                "task_index": getattr(r, "task_index", ""), "wall_s": round(wall, 2),
+               "solve_wall_s": round(solve_wall, 2),
+               "prepare_share_s": round(prepare_share_s, 2),
                **{k: sum(m.get(k, 0) for m in models.values()) for k in COUNTS}}
         rows.append(rec)
         with (out / "usage.jsonl").open("a") as fh:

@@ -1,5 +1,10 @@
 # Track 1 report — root cause analysis with per-call model routing
 
+This upstream report describes `agents.routed`, which the `eval/` harness selects
+explicitly. The working-tree default is now `agents.rootroute`; its implementation
+and separately measured results are documented in [REPORT_ROOTROUTE.md](REPORT_ROOTROUTE.md).
+Results for either agent should not be attributed to the other.
+
 ## Problem
 
 A microservice shop (OpenRCA `Market/cloudbed-1`) emits metrics, logs and traces.

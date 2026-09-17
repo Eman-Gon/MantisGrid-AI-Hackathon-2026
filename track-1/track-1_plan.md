@@ -422,18 +422,33 @@ condition has been met and its output has been inspected. When a row finishes, c
 `[ ]` to `[x]` and record the actual start and finish times in PDT. Use `[-]` for a
 deliberately cut phase and explain the cut in `REPORT.md`.
 
-**Current position:** Gate A — runnable release skeleton.
+**Current position:** Gate A — release integration is still open; Gate B's
+deterministic-analysis lane is progressing in parallel.
 
 | Done | Phase | Target | Started (PDT) | Finished (PDT) | Status / evidence / commit |
 |---|---|---:|---|---|---|
 | [x] | Plan revision | 11:00 AM | 10:45 AM | ~11:00 AM | Complete; this document incorporates the repository audit and official Track 1 docs |
-| [ ] | Gate A — runnable release skeleton | 11:25 AM | — | — | ← **CURRENT**; pending exact entrypoint, environment, data, and Docker proof |
-| [ ] | Gate B — end-to-end product | 12:35 PM | — | — | Pending Gate A |
+| [ ] | Gate A — runnable release skeleton | 11:25 AM | Active by 12:03 PM | — | ← **CURRENT / LATE**; `make PY=python3 validate` passes, but root Dockerfile, routed default, single-Dockerfile layout, Docker daemon, key proof, and exact judge-command proof remain open |
+| [ ] | Gate B — end-to-end product | 12:35 PM | Active by 12:03 PM | — | **In progress in parallel:** contracts, one-pass preparation, metric/trace detectors, and ranker are committed through `00dde3d`; 30/30 RCA unit tests pass. Routed integration, verifier, deterministic evidence, real `run.py` canaries, outage fallback, and runtime projection remain open |
 | [ ] | Gate C — harden and freeze | 1:20 PM | — | — | Pending Gate B |
 | [ ] | Evaluation | 1:55 PM | — | — | Pending Gate C; use the same fixed cases for every configuration |
 | [ ] | Release | 2:35 PM | — | — | Pending evaluation; requires the exact clean-clone judge command |
 | [ ] | Form submitted | 2:15 PM | — | — | Pending repository and presentation links; do not wait for the release deadline |
 | [ ] | Demo rehearsal and final check | 2:50 PM | — | — | Pending; four-minute timed rehearsal and final `main` verification |
+
+#### 2026-09-17 12:03 PDT — timeline audit
+
+- Repository: `main` at `00dde3d`, one commit ahead of `origin/main`; working tree
+  was clean before this timeline edit.
+- Gate A evidence: `make PY=python3 validate` passed on two heuristic cases and
+  produced parseable predictions plus two evidence files.
+- Gate A blockers: `run.py` still defaults to `agents.heuristic`; there is no root
+  `Dockerfile`; two nested Dockerfiles remain; `docker info` failed because the
+  daemon is not available; the exact container judge command has not run.
+- Gate B evidence: `python3 -m pytest -q starter/tests` passed **30/30** tests in
+  **1.07 seconds**. The deterministic RCA core files are present and committed.
+- Next current phase: finish Gate A integration immediately while Lane A continues
+  the remaining Gate B detector/ranker work.
 
 ### Timeline completion note
 

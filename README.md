@@ -29,11 +29,18 @@ reached.
 
 ```bash
 cd track-1/starter && pip install -r requirements.txt && cd ..
-export FEATHERLESS_API_KEY=fw-...
+# Save FEATHERLESS_API_KEY=... in the repository root .env, or export it.
 make validate                 # default agent on a one- and a two-failure case; checks shape
 make dev N=5 && make score    # first 5 dev cases, scored with the benchmark's evaluator
 make cost                     # dollars per case and per model
+make docker                   # loads .env and runs two cases in Docker
 ```
+
+The Make commands load the root `.env` automatically; exported variables take
+precedence. Docker receives the key at runtime, and `.env` files are excluded
+from the image. Direct `python3 run.py` commands still require an exported key.
+Use `make docker MODE=cheap DOCKER_OUT=out/docker-cheap` to exercise model calls
+even when the default routed mode can answer a case locally.
 
 ## Layout
 
@@ -42,11 +49,13 @@ Dockerfile              the only Dockerfile; builds track-1/starter into /app
 track-1/starter/
   run.py                the judged entry point (CLI unchanged from the starter)
   llm.py                Featherless client: retries, fallback, circuit breaker, token counts
-  agents/routed.py      the default agent
+  agents/rootroute.py   the default agent: deterministic first, then gated GLM selection
+  agents/routed.py      upstream agent retained for its existing evaluation harness
   agents/heuristic.py   no-model baseline and the always-guess fallback
   rca/                  the pipeline: prepare -> detect -> rank -> route -> verify -> evidence
 eval/                   harness, frozen case set, results   (see REPORT.md)
-REPORT.md               eval, routed-vs-single-model comparison, failure taxonomy
+REPORT.md               upstream agent evaluation and failure taxonomy
+REPORT_ROOTROUTE.md     RootRoute implementation, smoke results, and remaining evaluation
 AGENTS.md               invariants and file ownership for anyone editing this repo
 ```
 
@@ -60,12 +69,34 @@ python3 eval/summarize.py                       # -> eval/results/summary.md
 ```
 
 Every config runs the same frozen case ids (`eval/cases.json`) through the real
-`run.py`. Results and discussion are in [`REPORT.md`](REPORT.md).
+`run.py` with `agents.routed` explicitly selected. Results and discussion for that
+agent are in [`REPORT.md`](REPORT.md).
+
+RootRoute uses its own four-mode comparison. From `track-1/`, run each mode on the
+same cases, then compare the saved results:
+
+```bash
+make dev MODE=rules
+make dev MODE=cheap
+make dev MODE=strong
+make dev MODE=routed
+make compare
+```
+
+The RootRoute implementation and its two-case smoke test are documented in
+[`REPORT_ROOTROUTE.md`](REPORT_ROOTROUTE.md). Its paid model comparison remains
+pending; the upstream agent's model results do not establish RootRoute accuracy.
 
 ## AI disclosure
 
 Models, assistants and frameworks used, and what was AI-generated versus written by
 the team, are listed in [`REPORT.md`](REPORT.md#ai-disclosure).
+
+OpenAI Codex also assisted with RootRoute's code, tests, integration, and
+documentation. Its configured runtime models are `zai-org/GLM-4.7-Flash`,
+`zai-org/GLM-5.3-Flash`, `zai-org/GLM-5.2`, and `zai-org/GLM-5.1` on Featherless.
+RootRoute's recorded local smoke tests made no model calls. The runtime is custom
+Python and has no runtime MCP or third-party agent-framework dependency.
 
 ## Team
 

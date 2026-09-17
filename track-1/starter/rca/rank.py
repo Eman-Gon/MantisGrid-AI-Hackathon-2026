@@ -112,6 +112,20 @@ def _intrinsic_score(event: CandidateEvent) -> float:
     )
 
 
+def comparable_score(event: CandidateEvent) -> float:
+    """Return the ranker's cross-detector evidence score for routing decisions.
+
+    ``CandidateEvent.score`` is detector-local and therefore cannot safely be
+    compared between metric and trace events.  This public wrapper exposes the
+    exact normalized feature combination used by :func:`rank_events` without
+    exposing any label or answer-key information.
+    """
+
+    if not isinstance(event, CandidateEvent):
+        raise TypeError("event must be a CandidateEvent")
+    return _intrinsic_score(event)
+
+
 def _can_fuse(group: Sequence[CandidateEvent], event: CandidateEvent) -> bool:
     representative = group[0]
     if representative.component != event.component:
@@ -257,6 +271,12 @@ def _coalesce_replica_group(
     fact_ids = _unique_in_order(
         fact_id for event in ordered for fact_id in event.supporting_fact_ids
     )
+    alternatives = tuple(
+        sorted(
+            set(pods)
+            | {alternative for event in ordered for alternative in event.alternatives}
+        )
+    )
     modalities = sorted(frozenset().union(*(_modalities(event) for event in ordered)))
     feature = dict(_merge_features(ordered))
     feature["replica_support"] = float(len(pods))
@@ -279,7 +299,7 @@ def _coalesce_replica_group(
         score=round(score, 6),
         reason_candidates=reasons,
         supporting_fact_ids=fact_ids,
-        alternatives=pods,
+        alternatives=alternatives,
         modality="+".join(modalities),
         event_id=event_id,
         feature_scores=feature_scores,
@@ -414,4 +434,4 @@ rank_candidates = rank_events
 top_events = rank_events
 
 
-__all__ = ["rank_candidates", "rank_events", "top_events"]
+__all__ = ["comparable_score", "rank_candidates", "rank_events", "top_events"]

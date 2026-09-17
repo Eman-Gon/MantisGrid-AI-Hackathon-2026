@@ -33,9 +33,10 @@ import os
 import re
 import time
 
-from openai import APIStatusError, APITimeoutError, APIConnectionError, OpenAI
+from openai import APIConnectionError, APIStatusError, APITimeoutError, OpenAI
 
 DEFAULT_BASE_URL = "https://api.featherless.ai/v1"
+DEFAULT_TIMEOUT_S = 45.0
 RETRIES = 3          # per model, before moving to the next one
 BACKOFF = 2.0        # seconds, doubling each time
 BREAKER = 2          # give up on a model for the whole run after this many failures
@@ -51,8 +52,21 @@ class LLM:
         key = os.environ.get("FEATHERLESS_API_KEY")
         if not key:
             raise RuntimeError("FEATHERLESS_API_KEY is not set")
+        try:
+            timeout_s = float(
+                os.environ.get("FEATHERLESS_TIMEOUT_S", DEFAULT_TIMEOUT_S)
+            )
+        except ValueError as exc:
+            raise ValueError("FEATHERLESS_TIMEOUT_S must be numeric") from exc
+        if timeout_s <= 0:
+            raise ValueError("FEATHERLESS_TIMEOUT_S must be positive")
         self.client = OpenAI(api_key=key,
-                             base_url=os.environ.get("FEATHERLESS_BASE_URL", DEFAULT_BASE_URL))
+                             base_url=os.environ.get("FEATHERLESS_BASE_URL", DEFAULT_BASE_URL),
+                             timeout=timeout_s,
+                             # The wrapper below owns retry/fallback policy.  SDK-level
+                             # retries would multiply its waits and can consume the
+                             # judged run's twenty-minute wall-clock limit invisibly.
+                             max_retries=0)
         self.usage: dict[str, dict[str, int]] = {}
         self.retries = retries
         self.backoff = backoff
@@ -136,4 +150,4 @@ class LLM:
             text = (getattr(msg, "reasoning_content", None) or extra.get("reasoning_content")
                     or getattr(msg, "reasoning", None) or extra.get("reasoning") or "")
         # GLM models can think out loud first; keep only the answer
-        return re.sub(r"<think>.*?</think>", "", text, flags=re.S).strip()
+        return re.sub(r"<think>.*?</think>", "", text, flags=re.DOTALL).strip()

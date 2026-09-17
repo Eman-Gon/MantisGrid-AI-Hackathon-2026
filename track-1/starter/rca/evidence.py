@@ -18,6 +18,7 @@ from .contracts import (
     Hypothesis,
     format_utc8,
 )
+from .evidence_rootroute import render_evidence as render_evidence
 
 MAX_FACTS_PER_HYPOTHESIS = 6
 MAX_RULED_OUT = 6

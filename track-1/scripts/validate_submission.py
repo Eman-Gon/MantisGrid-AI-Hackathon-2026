@@ -63,8 +63,9 @@ def main() -> None:
 
     cmd = [sys.executable, "run.py", "--dataset", str(Path(args.dataset).resolve()),
            "--queries", str(queries), "--out", str(out), "--limit", str(args.cases)]
-    if args.agent:
-        cmd += ["--agent", args.agent]
+    selected_agent = args.agent or os.environ.get("VAL_AGENT", "")
+    if selected_agent:
+        cmd += ["--agent", selected_agent]
     print(f"\n$ {' '.join(cmd)}\n")
     try:
         r = subprocess.run(cmd, cwd=sub, timeout=args.timeout,

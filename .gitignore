@@ -9,6 +9,8 @@ track-2/data/synthetic/
 __pycache__/
 *.pyc
 .venv/
+.env
+.env.*
 .ipynb_checkpoints/
 .DS_Store
 claims.json
